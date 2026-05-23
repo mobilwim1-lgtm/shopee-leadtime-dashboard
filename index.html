@@ -113,6 +113,7 @@
                                 <option value="ANTRI LOADING">ANTRI LOADING</option>
                                 <option value="ANTRI MUAT">ANTRI MUAT</option>
                                 <option value="OPEN">OPEN</option>
+                                <option value="CLOSE">CLOSE</option>
                             </select>
                         </div>
                     </div>
@@ -129,30 +130,25 @@
             </div>
 
             <div class="lg:col-span-2 space-y-6">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                        <span class="text-xs font-bold text-gray-400 uppercase">Total Log Fleet</span>
-                        <div id="total-fleet" class="text-3xl font-black text-orange-600 mt-1">-</div>
-                    </div>
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                        <span class="text-xs font-bold text-gray-400 uppercase">Status Finish DO</span>
-                        <div id="finish-fleet" class="text-3xl font-black text-green-600 mt-1">-</div>
-                    </div>
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                        <span class="text-xs font-bold text-gray-400 uppercase">Standby / Proses</span>
-                        <div id="standby-fleet" class="text-3xl font-black text-blue-600 mt-1">-</div>
-                    </div>
-                </div>
-                
-                <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl text-xs text-blue-800 leading-relaxed">
-                    💡 <strong>Tips Operasional:</strong> Gunakan form di sebelah kiri untuk mendaftarkan armada masuk pertama kali. Pembaruan 4 parameter waktu (In/Out Load & In/Out Cust) dapat dilakukan langsung secara real-time pada baris tabel monitoring di bawah ini, lalu klik tombol <strong>Update</strong>.
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full flex flex-col justify-center">
+                    <h3 class="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                        💡 Aturan & Kebijakan Sistem Aktif
+                    </h3>
+                    <p class="text-sm text-gray-600 leading-relaxed mb-4">
+                        Aplikasi dashboard ini telah disesuaikan agar berjalan secara efisien dan aman sesuai kebutuhan operasional terbaru:
+                    </p>
+                    <ul class="text-xs text-gray-600 space-y-3 list-disc list-inside bg-gray-50 p-4 rounded-lg border border-gray-100">
+                        <li><strong class="text-blue-600">Restriksi Data 3 Hari:</strong> Tabel monitoring di bawah hanya memuat data dari 3 tanggal operasional terbaru yang tercatat di sistem agar mempercepat waktu muat halaman.</li>
+                        <li><strong class="text-red-600">Proteksi Status CLOSE:</strong> Setiap NOPOL yang memiliki status <strong>CLOSE</strong> otomatis mengunci fitur perubahan waktu. Kolom input dan tombol update akan disembunyikan demi keamanan validitas data histori.</li>
+                        <li><strong class="text-orange-600">Format Waktu Terstandarisasi:</strong> Semua pencatatan waktu yang berjalan menggunakan format 24 jam penuh.</li>
+                    </ul>
                 </div>
             </div>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="p-5 border-b bg-gray-50 flex justify-between items-center">
-                <h3 class="font-bold text-gray-800">📋 Monitoring Log Tabel Operasional</h3>
+                <h3 class="font-bold text-gray-800">📋 Monitoring Log Tabel Operasional (Maksimal 3 Hari Terbaru)</h3>
                 <span class="text-xs bg-blue-100 text-blue-700 font-bold px-2.5 py-1 rounded-full">Format Input Waktu: 24 Jam (Lokal)</span>
             </div>
             <div class="overflow-x-auto max-h-[500px]">
@@ -198,7 +194,7 @@
                 rawLogsData = data.logs || [];
                 masterUnitsData = data.units || [];
                 
-                renderInterface(rawLogsData);
+                renderInterface(rawLogsData, false);
             } catch (err) {
                 console.error("Gagal sinkronisasi data:", err);
             }
@@ -265,7 +261,7 @@
             return dateStr.replace(' ', 'T').substring(0, 16);
         }
 
-        // Filter Rentang Waktu (Berdasarkan Kolom IN LOAD)
+        // Filter Rentang Waktu Manual oleh User
         function applyDateFilter() {
             const startVal = document.getElementById('startDate').value;
             const endVal = document.getElementById('endDate').value;
@@ -276,67 +272,97 @@
             }
 
             const filtered = rawLogsData.filter(item => {
-                if (!item['IN LOAD']) return false;
-                const itemDate = item['IN LOAD'].substring(0, 10);
+                const targetDate = item['IN LOAD'] || item['ORDER DATE'];
+                if (!targetDate) return false;
+                const itemDate = targetDate.substring(0, 10);
                 return itemDate >= startVal && itemDate <= endVal;
             });
 
-            renderInterface(filtered);
+            renderInterface(filtered, true); // true tandanya filter manual diaktifkan
         }
 
         function resetDateFilter() {
             document.getElementById('startDate').value = '';
             document.getElementById('endDate').value = '';
-            renderInterface(rawLogsData);
+            renderInterface(rawLogsData, false);
         }
 
-        // Render Antarmuka Angka Ringkasan dan Baris Tabel
-        function renderInterface(data) {
-            document.getElementById('total-fleet').innerText = data.length;
-            const finishCount = data.filter(item => String(item['STATUS 2'] || item.STATUS || '').toUpperCase().includes('FINISH')).length;
-            document.getElementById('finish-fleet').innerText = finishCount;
-            document.getElementById('standby-fleet').innerText = data.length - finishCount;
+        // Render Antarmuka Tabel dengan Pembatasan Otomatis dan Cek Status CLOSE
+        function renderInterface(data, isFilteredByUser) {
+            let finalDisplayData = data;
+
+            // Jika dipanggil secara bawaan (bukan filter manual user), batasi hanya 3 hari terakhir
+            if (!isFilteredByUser) {
+                const uniqueDates = [...new Set(data.map(item => {
+                    const dateStr = item['IN LOAD'] || item['ORDER DATE'] || '';
+                    return dateStr.substring(0, 10);
+                }).filter(d => d))].sort().reverse();
+                
+                const top3Dates = uniqueDates.slice(0, 3);
+                
+                finalDisplayData = data.filter(item => {
+                    const dateStr = item['IN LOAD'] || item['ORDER DATE'] || '';
+                    return top3Dates.includes(dateStr.substring(0, 10));
+                });
+            }
 
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
             
-            if(data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-gray-400 italic">Tidak ada log data logistik pada periode ini.</td></tr>`;
+            if(finalDisplayData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-gray-400 italic">Tidak ada data logistik yang ditemukan.</td></tr>`;
             } else {
-                data.slice().reverse().forEach((item, index) => {
-                    const status2Val = item['STATUS 2'] || item.STATUS || '-';
-                    const isFinish = String(status2Val).includes('FINISH');
-                    const badgeClass = isFinish ? 'bg-green-100 text-green-700 border-green-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200';
+                finalDisplayData.slice().reverse().forEach((item, index) => {
+                    const status1Val = String(item['STATUS 1'] || '').trim().toUpperCase();
+                    const status2Val = String(item['STATUS 2'] || item.STATUS || '').trim().toUpperCase();
+                    
+                    // VALIDASI STATUS: Apakah nopol berstatus CLOSE?
+                    const isClosed = (status1Val === 'CLOSE' || status2Val === 'CLOSE');
+                    
+                    const isFinish = status2Val.includes('FINISH');
+                    let badgeClass = 'bg-yellow-100 text-yellow-700 border-yellow-200';
+                    if (isFinish) badgeClass = 'bg-green-100 text-green-700 border-green-200';
+                    if (isClosed) badgeClass = 'bg-red-100 text-red-700 border-red-200';
+                    
+                    let inLoadCell, outLoadCell, inCustCell, outCustCell, actionCell;
+                    
+                    // Pengkondisian Tampilan Fitur Update berdasarkan Status CLOSE
+                    if (isClosed) {
+                        // Jika berstatus CLOSE, kunci fitur pengisian (tampilkan teks biasa)
+                        inLoadCell = `<span class="text-gray-500 font-medium">${item['IN LOAD'] || '-'}</span>`;
+                        outLoadCell = `<span class="text-gray-500 font-medium">${item['OUT LOAD'] || '-'}</span>`;
+                        inCustCell = `<span class="text-gray-500 font-medium">${item['IN CUST.'] || '-'}</span>`;
+                        outCustCell = `<span class="text-gray-500 font-medium">${item['OUT CUST.'] || '-'}</span>`;
+                        actionCell = `<span class="text-xs text-red-500 font-bold tracking-wide bg-red-50 px-2 py-1 rounded border border-red-100">🔒 Terkunci</span>`;
+                    } else {
+                        // Jika status OPEN/aktif, tampilkan komponen editor waktu & tombol update
+                        inLoadCell = `<input type="datetime-local" class="col-in-load p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['IN LOAD'])}">`;
+                        outLoadCell = `<input type="datetime-local" class="col-out-load p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['OUT LOAD'])}">`;
+                        inCustCell = `<input type="datetime-local" class="col-in-cust p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['IN CUST.'])}">`;
+                        outCustCell = `<input type="datetime-local" class="col-out-cust p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['OUT CUST.'])}">`;
+                        actionCell = `
+                            <button onclick="updateRowDetails(${item.ROW_INDEX}, this)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-1 px-2.5 rounded shadow transition">
+                                Update
+                            </button>`;
+                    }
                     
                     const row = `
                         <tr class="hover:bg-gray-50 transition border-b">
-                            <td class="p-2 font-semibold text-gray-400 text-center">${data.length - index}</td>
+                            <td class="p-2 font-semibold text-gray-400 text-center">${finalDisplayData.length - index}</td>
                             <td class="p-2 font-bold text-gray-900">${item.NOPOL || '-'}</td>
                             <td class="p-2 text-xs">
                                 <div class="font-bold text-gray-800">${item['DRIVER NAME'] || '-'}</div>
                                 <div class="text-gray-500">${item.ORIGIN || '-'} → ${item.DESTINATION || '-'}</div>
                             </td>
-                            <td class="p-2">
-                                <input type="datetime-local" class="col-in-load p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['IN LOAD'])}">
-                            </td>
-                            <td class="p-2">
-                                <input type="datetime-local" class="col-out-load p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['OUT LOAD'])}">
-                            </td>
-                            <td class="p-2">
-                                <input type="datetime-local" class="col-in-cust p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['IN CUST.'])}">
-                            </td>
-                            <td class="p-2">
-                                <input type="datetime-local" class="col-out-cust p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['OUT CUST.'])}">
-                            </td>
+                            <td class="p-2">${inLoadCell}</td>
+                            <td class="p-2">${outLoadCell}</td>
+                            <td class="p-2">${inCustCell}</td>
+                            <td class="p-2">${outCustCell}</td>
                             <td class="p-2 text-xs">
                                 <div class="font-bold text-blue-600">S1: ${item['STATUS 1'] || '-'}</div>
-                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-full border ${badgeClass}">${status2Val}</span>
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-full border ${badgeClass}">${item['STATUS 2'] || item.STATUS || '-'}</span>
                             </td>
-                            <td class="p-2 text-center">
-                                <button onclick="updateRowDetails(${item.ROW_INDEX}, this)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-1 px-2.5 rounded shadow transition">
-                                    Update
-                                </button>
-                            </td>
+                            <td class="p-2 text-center">${actionCell}</td>
                         </tr>`;
                     tbody.innerHTML += row;
                 });
