@@ -3,125 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopee Lead Time Dashboard</title>
+    <title>Shopee Logistics Dashboard & Input System</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans">
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
 
-    <div class="container mx-auto p-6">
-        <header class="mb-8 flex justify-between items-center bg-white p-6 rounded-lg shadow-md border-l-4 border-orange-500">
+    <div class="container mx-auto p-4 lg:p-8">
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-xl shadow-sm border-l-8 border-orange-500 gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Shopee Logistics Dashboard</h1>
-                <p class="text-sm text-gray-500">Monitoring Lead Time & Status Driver secara Real-time</p>
+                <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Shopee Logistics System</h1>
+                <p class="text-sm text-gray-500 mt-1">Sistem Input Manifest Data & Visualisasi Lead Time Terintegrasi</p>
             </div>
-            <button onclick="fetchData()" class="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded transition shadow">
-                Refresh Data
+            <button onclick="fetchDashboardData()" class="w-full md:w-auto bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 px-6 rounded-lg transition dynamic shadow-md">
+                🔄 Refresh Data
             </button>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-500">
-                <h3 class="text-gray-500 text-sm font-semibold uppercase">Total Pengiriman</h3>
-                <p id="total-shipments" class="text-4xl font-extrabold mt-2 text-blue-600">-</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1">
+                <h2 class="text-xl font-bold text-gray-900 mb-4 border-b pb-2 flex items-center gap-2">
+                    📥 Input Data Logistik Baru
+                </h2>
+                <form id="logisticForm" onsubmit="submitForm(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Nopol Kendaraan</label>
+                        <input type="text" name="NOPOL" placeholder="Contoh: B 9505 TEX" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-orange-400 outline-none" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Nama Driver</label>
+                        <input type="text" name="DRIVER NAME" placeholder="Nama Lengkap" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-orange-400 outline-none" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">No HP</label>
+                            <input type="text" name="NO HP" placeholder="08..." class="w-full p-2 border rounded-md focus:ring-2 focus:ring-orange-400 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Type Truk</label>
+                            <input type="text" name="TYPE" placeholder="WB / WE / dll" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-orange-400 outline-none">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Origin</label>
+                            <input type="text" name="ORIGIN" placeholder="Asal Hub" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-orange-400 outline-none" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Destination</label>
+                            <input type="text" name="DESTINATION" placeholder="Tujuan Hub" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-orange-400 outline-none" required>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Waktu Masuk (In Load)</label>
+                            <input type="datetime-local" name="IN LOAD" class="w-full p-2 border rounded-md text-sm outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Waktu Keluar (Out Load)</label>
+                            <input type="datetime-local" name="OUT LOAD" class="w-full p-2 border rounded-md text-sm outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Status Utama</label>
+                        <select name="STATUS" class="w-full p-2 border rounded-md outline-none focus:ring-2 focus:ring-orange-400">
+                            <option value="FINISH DO">FINISH DO</option>
+                            <option value="ANTRI LOADING">ANTRI LOADING</option>
+                            <option value="ANTRI MUAT">ANTRI MUAT</option>
+                            <option value="OPEN">OPEN</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Keterangan Opsional</label>
+                        <textarea name="KETERANGAN" rows="2" placeholder="Catatan tambahan operasional..." class="w-full p-2 border rounded-md text-sm outline-none"></textarea>
+                    </div>
+                    <button type="submit" id="btnSubmit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg transition shadow">
+                        💾 Simpan ke Google Sheet
+                    </button>
+                </form>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-green-500">
-                <h3 class="text-gray-500 text-sm font-semibold uppercase">Status Finish DO</h3>
-                <p id="finish-do" class="text-4xl font-extrabold mt-2 text-green-600">-</p>
-            </div>
-            <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-yellow-500">
-                <h3 class="text-gray-500 text-sm font-semibold uppercase">Rata-rata Waktu SE</h3>
-                <p id="avg-time" class="text-4xl font-extrabold mt-2 text-yellow-600">-</p>
+
+            <div class="lg:col-span-2 space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                        <span class="text-xs font-bold text-gray-400 uppercase">Total Log Fleet</span>
+                        <div id="total-fleet" class="text-3xl font-black text-orange-600 mt-1">-</div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                        <span class="text-xs font-bold text-gray-400 uppercase">Status Finish DO</span>
+                        <div id="finish-fleet" class="text-3xl font-black text-green-600 mt-1">-</div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                        <span class="text-xs font-bold text-gray-400 uppercase">Standby / Proses</span>
+                        <div id="standby-fleet" class="text-3xl font-black text-blue-600 mt-1">-</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="text-sm font-bold mb-3 text-gray-700">Proporsi Hub Asal (Origin)</h3>
+                        <canvas id="originChart"></canvas>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="text-sm font-bold mb-3 text-gray-700">Aktivitas Armada Driver</h3>
+                        <canvas id="driverChart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-xl font-bold mb-4">Distribusi Origin Pengiriman</h2>
-                <canvas id="originChart"></canvas>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-5 border-b bg-gray-50">
+                <h3 class="font-bold text-gray-800">📋 Monitoring Log Tabel Operasional Terkini</h3>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-xl font-bold mb-4">Aktivitas Driver Terbanyak</h2>
-                <canvas id="driverChart"></canvas>
+            <div class="overflow-x-auto max-h-96">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 text-xs font-bold text-gray-600 uppercase border-b">
+                            <th class="p-3">No</th>
+                            <th class="p-3">Nopol</th>
+                            <th class="p-3">Driver</th>
+                            <th class="p-3">Origin</th>
+                            <th class="p-3">Destination</th>
+                            <th class="p-3">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="text-sm divide-y">
+                        </tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <script>
-        // GANTI DENGAN WEB APP URL DARI GOOGLE APPS SCRIPT ANDA
-        const API_URL = "https://script.google.com/macros/s/AKfycbxhLowM9ffwffPA-ssTLpvTzzWRDYVFrek1ySj_jZljgoVQlxB4WX8lep_fbF38687Yug/exec";
+        // MASUKKAN URL WEB APP APPS SCRIPT ANDA DI SINI
+        const APPS_SCRIPT_URL = "TAUTAN_WEB_APP_APPS_SCRIPT_ANDA";
 
-        let originChart, driverChart;
+        let charts = {};
 
-        async function fetchData() {
+        async function fetchDashboardData() {
             try {
-                const response = await fetch(API_URL);
+                const response = await fetch(APPS_SCRIPT_URL);
                 const data = await response.json();
-                
-                updateStats(data);
-                renderCharts(data);
-            } catch (error) {
-                console.error("Gagal mengambil data dashboard:", error);
-                alert("Gagal memuat data. Pastikan Apps Script sudah di-deploy sebagai 'Anyone'.");
+                updateInterface(data);
+            } catch (err) {
+                console.error("Gagal sinkronisasi data:", err);
             }
         }
 
-        function updateStats(data) {
-            document.getElementById('total-shipments').innerText = data.length;
-            
-            const finishCount = data.filter(item => item.Status && item.Status.toUpperCase().includes('FINISH')).length;
-            document.getElementById('finish-do').innerText = finishCount;
+        function updateInterface(data) {
+            // Update Card Stats
+            document.getElementById('total-fleet').innerText = data.length;
+            const finishCount = data.filter(item => String(item.STATUS).toUpperCase().includes('FINISH')).length;
+            document.getElementById('finish-fleet').innerText = finishCount;
+            document.getElementById('standby-fleet').innerText = data.length - finishCount;
 
-            document.getElementById('avg-time').innerText = "Dynamic";
-        }
-
-        function renderCharts(data) {
-            // Proses Data untuk Grafik Origin
-            const origins = {};
-            const drivers = {};
-
-            data.forEach(item => {
-                if (item.Origin) origins[item.Origin] = (origins[item.Origin] || 0) + 1;
-                if (item["Driver Name"]) drivers[item["Driver Name"]] = (drivers[item["Driver Name"]] || 0) + 1;
+            // Update Real-Time Table
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            data.slice().reverse().forEach((item, index) => {
+                const row = `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-3 font-semibold text-gray-500">${data.length - index}</td>
+                        <td class="p-3 font-bold text-gray-900">${item.NOPOL || '-'}</td>
+                        <td class="p-3 font-medium text-gray-700">${item['DRIVER NAME'] || '-'}</td>
+                        <td class="p-3 text-gray-600">${item.ORIGIN || '-'}</td>
+                        <td class="p-3 text-gray-600">${item.DESTINATION || '-'}</td>
+                        <td class="p-3">
+                            <span class="px-2.5 py-1 text-xs font-bold rounded-full ${String(item.STATUS).includes('FINISH') ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                                ${item.STATUS || 'OPEN'}
+                            </span>
+                        </td>
+                    </tr>`;
+                tbody.innerHTML += row;
             });
 
-            // Reset Charts jika sudah ada sebelumnya
-            if (originChart) originChart.destroy();
-            if (driverChart) driverChart.destroy();
+            // Re-render Graph Chart.js
+            renderVisualizations(data);
+        }
 
-            // 1. Origin Chart (Pie)
-            const ctxOrigin = document.getElementById('originChart').getContext('2d');
-            originChart = new Chart(ctxOrigin, {
-                type: 'pie',
+        function renderVisualizations(data) {
+            const originData = {}, driverData = {};
+            data.forEach(item => {
+                if(item.ORIGIN) originData[item.ORIGIN] = (originData[item.ORIGIN] || 0) + 1;
+                if(item['DRIVER NAME']) driverData[item['DRIVER NAME']] = (driverData[item['DRIVER NAME']] || 0) + 1;
+            });
+
+            if(charts.origin) charts.origin.destroy();
+            if(charts.driver) charts.driver.destroy();
+
+            charts.origin = new Chart(document.getElementById('originChart'), {
+                type: 'doughnut',
                 data: {
-                    labels: Object.keys(origins),
-                    datasets: [{
-                        data: Object.values(origins),
-                        backgroundColor: ['#f97316', '#3b82f6', '#10b981', '#eab308', '#a855f7']
-                    }]
+                    labels: Object.keys(originData),
+                    datasets: [{ data: Object.values(originData), backgroundColor: ['#f97316', '#3b82f6', '#10b981', '#eab308'] }]
                 }
             });
 
-            // 2. Driver Chart (Bar)
-            const ctxDriver = document.getElementById('driverChart').getContext('2d');
-            driverChart = new Chart(ctxDriver, {
+            charts.driver = new Chart(document.getElementById('driverChart'), {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(drivers),
-                    datasets: [{
-                        label: 'Jumlah Trip',
-                        data: Object.values(drivers),
-                        backgroundColor: '#3b82f6'
-                    }]
+                    labels: Object.keys(driverData),
+                    datasets: [{ label: 'Total Trip', data: Object.values(driverData), backgroundColor: '#3b82f6' }]
                 },
-                options: {
-                    scales: { y: { beginAtZero: true } }
-                }
+                options: { scales: { y: { beginAtZero: true } } }
             });
         }
 
-        // Jalankan saat halaman dibuka
-        window.onload = fetchData;
+        async function submitForm(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            btn.innerText = "⏳ Memproses Penyimpanan...";
+            btn.disabled = true;
+
+            const formData = new FormData(event.target);
+            const formObject = {};
+            
+            formData.forEach((value, key) => {
+                if((key === 'IN LOAD' || key === 'OUT LOAD') && value) {
+                    formObject[key] = value.replace('T', ' ') + ':00'; // Sesuaikan format waktu spreadsheet
+                } else {
+                    formObject[key] = value;
+                }
+            });
+
+            try {
+                // Gunakan mode no-cors jika mengalami isu pre-flight CORS di server lokal, atau langsung gunakan default fetch POST JSON
+                await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formObject)
+                });
+
+                alert("Data Berhasil Terkirim ke Google Sheets!");
+                document.getElementById('logisticForm').reset();
+                setTimeout(fetchDashboardData, 2000); // Sinkronisasi ulang tabel web setelah 2 detik
+            } catch (err) {
+                alert("Terjadi kesalahan pengiriman data.");
+                console.error(err);
+            } finally {
+                btn.innerText = "💾 Simpan ke Google Sheet";
+                btn.disabled = false;
+            }
+        }
+
+        window.onload = fetchDashboardData;
     </script>
 </body>
 </html>
