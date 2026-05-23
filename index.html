@@ -47,15 +47,24 @@
                     📥 Input Data Logistik Baru
                 </h2>
                 <form id="logisticForm" onsubmit="submitForm(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Nopol Kendaraan</label>
-                        <input type="text" id="inputNopol" name="NOPOL" placeholder="Contoh: B 9505 TEX" class="w-full p-2.5 border border-orange-300 bg-orange-50 font-bold rounded-md focus:ring-2 focus:ring-orange-400 outline-none uppercase" required>
-                        <p id="autoFillStatus" class="text-xs text-gray-400 mt-1 italic">Ketik nopol terdaftar...</p>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Nopol Kendaraan</label>
+                            <input type="text" id="inputNopol" name="NOPOL" placeholder="B 1234 ABC" class="w-full p-2 border border-orange-300 bg-orange-50 font-bold rounded-md focus:ring-2 focus:ring-orange-400 outline-none uppercase" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Order Date</label>
+                            <input type="date" name="ORDER DATE" class="w-full p-2 border border-gray-300 rounded-md outline-none text-sm" required>
+                        </div>
                     </div>
+                    <p id="autoFillStatus" class="text-xs text-gray-400 italic">Ketik nopol terdaftar...</p>
+
                     <div>
                         <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Nama Driver</label>
                         <input type="text" id="inputDriver" name="DRIVER NAME" placeholder="Otomatis terisi / isi manual..." class="w-full p-2 border border-gray-300 rounded-md outline-none" required>
                     </div>
+
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">No HP</label>
@@ -66,6 +75,7 @@
                             <input type="text" id="inputType" name="TYPE" placeholder="Tipe truk..." class="w-full p-2 border border-gray-300 rounded-md outline-none">
                         </div>
                     </div>
+
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Origin</label>
@@ -76,29 +86,65 @@
                             <input type="text" name="DESTINATION" placeholder="Tujuan Hub" class="w-full p-2 border border-gray-300 rounded-md outline-none" required>
                         </div>
                     </div>
+
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Waktu In Load</label>
-                            <input type="datetime-local" name="IN LOAD" class="w-full p-2 border border-gray-300 rounded-md text-sm outline-none">
+                            <input type="datetime-local" name="IN LOAD" class="w-full p-2 border border-gray-300 rounded-md text-xs outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Waktu Out Load</label>
-                            <input type="datetime-local" name="OUT LOAD" class="w-full p-2 border border-gray-300 rounded-md text-sm outline-none">
+                            <input type="datetime-local" name="OUT LOAD" class="w-full p-2 border border-gray-300 rounded-md text-xs outline-none">
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Status Utama</label>
-                        <select name="STATUS" class="w-full p-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-orange-400 font-medium">
-                            <option value="FINISH DO">FINISH DO</option>
-                            <option value="ANTRI LOADING">ANTRI LOADING</option>
-                            <option value="ANTRI MUAT">ANTRI MUAT</option>
-                            <option value="OPEN">OPEN</option>
-                        </select>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">In Cust.</label>
+                            <input type="datetime-local" name="IN CUST." class="w-full p-2 border border-gray-300 rounded-md text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Out Cust.</label>
+                            <input type="datetime-local" name="OUT CUST." class="w-full p-2 border border-gray-300 rounded-md text-xs outline-none">
+                        </div>
                     </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Time SB</label>
+                            <input type="text" name="TIME SB" placeholder="Contoh: 21:00" class="w-full p-2 border border-gray-300 rounded-md text-sm outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Update Position</label>
+                            <input type="text" name="UPDATE POSITION" placeholder="Posisi terkini" class="w-full p-2 border border-gray-300 rounded-md text-sm outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Status 1</label>
+                            <select name="STATUS 1" class="w-full p-2 border border-gray-300 rounded-md outline-none font-medium text-sm">
+                                <option value="OPEN">OPEN</option>
+                                <option value="CLOSE">CLOSE</option>
+                                <option value="CANCEL">CANCEL</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Status 2</label>
+                            <select name="STATUS 2" class="w-full p-2 border border-gray-300 rounded-md outline-none font-medium text-sm">
+                                <option value="FINISH DO">FINISH DO</option>
+                                <option value="ANTRI LOADING">ANTRI LOADING</option>
+                                <option value="ANTRI MUAT">ANTRI MUAT</option>
+                                <option value="OPEN">OPEN</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div>
                         <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Keterangan Opsional</label>
                         <textarea name="KETERANGAN" rows="2" placeholder="Catatan operasional..." class="w-full p-2 border border-gray-300 rounded-md text-sm outline-none"></textarea>
                     </div>
+
                     <button type="submit" id="btnSubmit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg transition shadow-md">
                         💾 Simpan ke Google Sheet
                     </button>
@@ -153,12 +199,14 @@
                             <th class="p-3">Driver</th>
                             <th class="p-3">Origin</th>
                             <th class="p-3">Destination</th>
-                            <th class="p-3">Status</th>
+                            <th class="p-3">Status 1</th>
+                            <th class="p-3">Status 2</th>
+                            <th class="p-3">Position</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody" class="text-sm divide-y">
                         <tr>
-                            <td colspan="6" class="p-8 text-center text-gray-400 italic">Memuat data logistik...</td>
+                            <td colspan="8" class="p-8 text-center text-gray-400 italic">Memuat data logistik...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -205,7 +253,6 @@
                 return;
             }
 
-            // Cari kecocokan di database sheet "Data Unit Total" (tanpa spasi)
             const match = masterUnitsData.find(unit => {
                 const cleanSheetNopol = String(unit['NOPOL'] || '').trim().toUpperCase().replace(/\s+/g, '');
                 return cleanSheetNopol === typedNopol;
@@ -218,9 +265,8 @@
                 
                 statusLabel.innerText = "✅ Data unit ditemukan otomatis dari master!";
                 statusLabel.className = "text-xs text-green-600 mt-1 font-semibold";
-                toggleFieldsEditable(false); // Kunci agar tidak salah ketik
+                toggleFieldsEditable(false);
             } else {
-                // FALLBACK: Nopol baru / tidak terdaftar -> Buka kunci agar bisa diketik manual
                 statusLabel.innerText = "⚠️ Nopol belum terdaftar di 'Data Unit Total'. Silakan isi MANUAL:";
                 statusLabel.className = "text-xs text-orange-500 mt-1 font-semibold italic";
                 toggleFieldsEditable(true); 
@@ -249,7 +295,7 @@
             document.getElementById('inputType').value = '';
         }
 
-        // 3. Sistem Filter Rentang Waktu
+        // 3. Sistem Filter Rentang Waktu (Berdasarkan Kolom IN LOAD)
         function applyDateFilter() {
             const startVal = document.getElementById('startDate').value;
             const endVal = document.getElementById('endDate').value;
@@ -261,7 +307,7 @@
 
             const filtered = rawLogsData.filter(item => {
                 if (!item['IN LOAD']) return false;
-                const itemDate = item['IN LOAD'].substring(0, 10); // Format YYYY-MM-DD
+                const itemDate = item['IN LOAD'].substring(0, 10);
                 return itemDate >= startVal && itemDate <= endVal;
             });
 
@@ -276,22 +322,23 @@
 
         // 4. Render Komponen Visualisasi & Tabel Konten
         function renderInterface(data) {
-            // Update Ringkasan Angka Utama
             document.getElementById('total-fleet').innerText = data.length;
-            const finishCount = data.filter(item => String(item.STATUS).toUpperCase().includes('FINISH')).length;
+            // Gunakan STATUS 2 untuk ringkasan counter box
+            const finishCount = data.filter(item => String(item['STATUS 2'] || item.STATUS || '').toUpperCase().includes('FINISH')).length;
             document.getElementById('finish-fleet').innerText = finishCount;
             document.getElementById('standby-fleet').innerText = data.length - finishCount;
 
-            // Build Tampilan Tabel Terbalik (Terbaru Di Atas)
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
             
             if(data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400 italic">Tidak ada log data logistik pada periode ini.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-gray-400 italic">Tidak ada log data logistik pada periode ini.</td></tr>`;
             } else {
                 data.slice().reverse().forEach((item, index) => {
-                    const isFinish = String(item.STATUS).includes('FINISH');
+                    const status2Val = item['STATUS 2'] || item.STATUS || '-';
+                    const isFinish = String(status2Val).includes('FINISH');
                     const badgeClass = isFinish ? 'bg-green-100 text-green-700 border-green-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200';
+                    
                     const row = `
                         <tr class="hover:bg-gray-50 transition border-b">
                             <td class="p-3 font-semibold text-gray-400">${data.length - index}</td>
@@ -299,11 +346,13 @@
                             <td class="p-3 font-medium text-gray-700">${item['DRIVER NAME'] || '-'}</td>
                             <td class="p-3 text-gray-600">${item.ORIGIN || '-'}</td>
                             <td class="p-3 text-gray-600">${item.DESTINATION || '-'}</td>
+                            <td class="p-3 font-semibold text-gray-700">${item['STATUS 1'] || '-'}</td>
                             <td class="p-3">
                                 <span class="px-2.5 py-1 text-xs font-bold rounded-full border ${badgeClass}">
-                                    ${item.STATUS || 'OPEN'}
+                                    ${status2Val}
                                 </span>
                             </td>
+                            <td class="p-3 text-xs text-gray-600 max-w-[150px] truncate">${item['UPDATE POSITION'] || '-'}</td>
                         </tr>`;
                     tbody.innerHTML += row;
                 });
@@ -317,7 +366,7 @@
             const originData = {}, driverData = {};
             data.forEach(item => {
                 if(item.ORIGIN) originData[item.ORIGIN] = (originData[item.ORIGIN] || 0) + 1;
-                if(item['DRIVER NAME']) driverData[item['DRIVER NAME']] = (driverData[item['DRIVER NAME']] || 0) + 1;
+                if(item['DRIVER NAME']) driverData[item['DRIVER NAME']] = (driverData[item['DRIVER NAME'] || ''] || 0) + 1;
             });
 
             if(charts.origin) charts.origin.destroy();
@@ -353,8 +402,8 @@
             const formObject = {};
             
             formData.forEach((value, key) => {
-                if((key === 'IN LOAD' || key === 'OUT LOAD') && value) {
-                    // Normalisasi pemisah tanggal waktu HTML agar ramah dibaca Spreadsheet
+                // Format tanggal & waktu khusus agar rapi dibaca Google Sheet
+                if(['IN LOAD', 'OUT LOAD', 'IN CUST.', 'OUT CUST.'].includes(key) && value) {
                     formObject[key] = value.replace('T', ' ') + ':00';
                 } else {
                     formObject[key] = value;
@@ -364,7 +413,7 @@
             try {
                 await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // Mencegah pemblokiran browser CORS lintas domain
+                    mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formObject)
                 });
@@ -375,7 +424,6 @@
                 toggleFieldsEditable(true);
                 document.getElementById('autoFillStatus').innerText = "Ketik nopol terdaftar...";
                 
-                // Beri jeda 1.5 detik agar Google Sheet memproses penulisan baris baru
                 setTimeout(fetchDashboardData, 1500);
             } catch (err) {
                 alert("Gagal mengirimkan data ke Google Sheet.");
@@ -386,7 +434,6 @@
             }
         }
 
-        // Ambil data pertama kali saat halaman berhasil dimuat penuh
         window.onload = fetchDashboardData;
     </script>
 </body>
