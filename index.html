@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopee Lead Time Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+    <div class="container mx-auto p-6">
+        <header class="mb-8 flex justify-between items-center bg-white p-6 rounded-lg shadow-md border-l-4 border-orange-500">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Shopee Logistics Dashboard</h1>
+                <p class="text-sm text-gray-500">Monitoring Lead Time & Status Driver secara Real-time</p>
+            </div>
+            <button onclick="fetchData()" class="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded transition shadow">
+                Refresh Data
+            </button>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-500">
+                <h3 class="text-gray-500 text-sm font-semibold uppercase">Total Pengiriman</h3>
+                <p id="total-shipments" class="text-4xl font-extrabold mt-2 text-blue-600">-</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-green-500">
+                <h3 class="text-gray-500 text-sm font-semibold uppercase">Status Finish DO</h3>
+                <p id="finish-do" class="text-4xl font-extrabold mt-2 text-green-600">-</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-yellow-500">
+                <h3 class="text-gray-500 text-sm font-semibold uppercase">Rata-rata Waktu SE</h3>
+                <p id="avg-time" class="text-4xl font-extrabold mt-2 text-yellow-600">-</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-bold mb-4">Distribusi Origin Pengiriman</h2>
+                <canvas id="originChart"></canvas>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-bold mb-4">Aktivitas Driver Terbanyak</h2>
+                <canvas id="driverChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // GANTI DENGAN WEB APP URL DARI GOOGLE APPS SCRIPT ANDA
+        const API_URL = "SALIN_URL_WEB_APP_APPS_SCRIPT_DISINI";
+
+        let originChart, driverChart;
+
+        async function fetchData() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                
+                updateStats(data);
+                renderCharts(data);
+            } catch (error) {
+                console.error("Gagal mengambil data dashboard:", error);
+                alert("Gagal memuat data. Pastikan Apps Script sudah di-deploy sebagai 'Anyone'.");
+            }
+        }
+
+        function updateStats(data) {
+            document.getElementById('total-shipments').innerText = data.length;
+            
+            const finishCount = data.filter(item => item.Status && item.Status.toUpperCase().includes('FINISH')).length;
+            document.getElementById('finish-do').innerText = finishCount;
+
+            document.getElementById('avg-time').innerText = "Dynamic";
+        }
+
+        function renderCharts(data) {
+            // Proses Data untuk Grafik Origin
+            const origins = {};
+            const drivers = {};
+
+            data.forEach(item => {
+                if (item.Origin) origins[item.Origin] = (origins[item.Origin] || 0) + 1;
+                if (item["Driver Name"]) drivers[item["Driver Name"]] = (drivers[item["Driver Name"]] || 0) + 1;
+            });
+
+            // Reset Charts jika sudah ada sebelumnya
+            if (originChart) originChart.destroy();
+            if (driverChart) driverChart.destroy();
+
+            // 1. Origin Chart (Pie)
+            const ctxOrigin = document.getElementById('originChart').getContext('2d');
+            originChart = new Chart(ctxOrigin, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(origins),
+                    datasets: [{
+                        data: Object.values(origins),
+                        backgroundColor: ['#f97316', '#3b82f6', '#10b981', '#eab308', '#a855f7']
+                    }]
+                }
+            });
+
+            // 2. Driver Chart (Bar)
+            const ctxDriver = document.getElementById('driverChart').getContext('2d');
+            driverChart = new Chart(ctxDriver, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(drivers),
+                    datasets: [{
+                        label: 'Jumlah Trip',
+                        data: Object.values(drivers),
+                        backgroundColor: '#3b82f6'
+                    }]
+                },
+                options: {
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        // Jalankan saat halaman dibuka
+        window.onload = fetchData;
+    </script>
+</body>
+</html>
