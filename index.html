@@ -164,27 +164,36 @@
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="p-5 border-b bg-gray-50 flex justify-between items-center">
-                <h3 class="font-bold text-gray-800">📋 Monitoring Log Tabel Operasional (Maksimal 3 Hari Terbaru)</h3>
+                <h3 class="font-bold text-gray-800">📋 Monitoring Log Tabel Operasional</h3>
                 <span class="text-xs bg-blue-100 text-blue-700 font-bold px-2.5 py-1 rounded-full">Format Input Waktu: 24 Jam (Lokal)</span>
             </div>
-            <div class="overflow-x-auto max-h-[500px]">
-                <table class="w-full text-left border-collapse min-w-[1200px]">
+            <div class="overflow-x-auto max-h-[550px]">
+                <table class="w-full text-left border-collapse min-w-[2200px]">
                     <thead>
                         <tr class="bg-gray-100 text-xs font-bold text-gray-600 uppercase border-b sticky top-0 bg-gray-100 z-10">
                             <th class="p-3 w-12 text-center">No</th>
-                            <th class="p-3 w-32">Nopol</th>
-                            <th class="p-3 w-40">Driver / Route</th>
-                            <th class="p-3">Waktu In Load (24H)</th>
-                            <th class="p-3">Waktu Out Load (24H)</th>
-                            <th class="p-3">In Cust. (24H)</th>
-                            <th class="p-3">Out Cust. (24H)</th>
-                            <th class="p-3 w-28">Status</th>
-                            <th class="p-3 w-24 text-center">Aksi</th>
+                            <th class="p-3">Nopol</th>
+                            <th class="p-3">Driver Name</th>
+                            <th class="p-3">No HP</th>
+                            <th class="p-3">Type</th>
+                            <th class="p-3">Order Date</th>
+                            <th class="p-3">Origin</th>
+                            <th class="p-3">In Load (24H)</th>
+                            <th class="p-3">Out Load (24H)</th>
+                            <th class="p-3">Destination</th>
+                            <th class="p-3">In Cust (24H)</th>
+                            <th class="p-3">Out Cust (24H)</th>
+                            <th class="p-3">Status 1</th>
+                            <th class="p-3">Update Position</th>
+                            <th class="p-3">Status 2</th>
+                            <th class="p-3">Time SB</th>
+                            <th class="p-3">Keterangan</th>
+                            <th class="p-3 w-24 text-center sticky right-0 bg-gray-100 z-10 shadow-left">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody" class="text-sm divide-y">
                         <tr>
-                            <td colspan="9" class="p-8 text-center text-gray-400 italic">Memuat data logistik...</td>
+                            <td colspan="18" class="p-8 text-center text-gray-400 italic">Memuat data logistik...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -297,6 +306,7 @@
             renderInterface(filtered, true);
         }
 
+        // Reset Filter Tanggal
         function resetDateFilter() {
             document.getElementById('startDate').value = '';
             document.getElementById('endDate').value = '';
@@ -354,7 +364,7 @@
             tbody.innerHTML = '';
             
             if(finalDisplayData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-gray-400 italic">Tidak ada data logistik yang ditemukan.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="18" class="p-8 text-center text-gray-400 italic">Tidak ada data logistik yang ditemukan.</td></tr>`;
             } else {
                 finalDisplayData.slice().reverse().forEach((item, index) => {
                     const status1Val = String(item['STATUS 1'] || '').trim().toUpperCase();
@@ -374,38 +384,48 @@
                         // Jika CLOSE: Sembunyikan input editor waktu & tombol update (Terkunci)
                         inLoadCell = `<span class="text-gray-500 font-medium">${item['IN LOAD'] || '-'}</span>`;
                         outLoadCell = `<span class="text-gray-500 font-medium">${item['OUT LOAD'] || '-'}</span>`;
-                        inCustCell = `<span class="text-gray-500 font-medium">${item['IN CUST.'] || '-'}</span>`;
-                        outCustCell = `<span class="text-gray-500 font-medium">${item['OUT CUST.'] || '-'}</span>`;
+                        inCustCell = `<span class="text-gray-500 font-medium">${item['IN CUST.'] || item['IN CUST'] || '-'}</span>`;
+                        outCustCell = `<span class="text-gray-500 font-medium">${item['OUT CUST.'] || item['OUT CUST'] || '-'}</span>`;
                         actionCell = `<span class="text-xs text-red-500 font-bold tracking-wide bg-red-50 px-2 py-1 rounded border border-red-100">🔒 Terkunci</span>`;
                     } else {
                         // Jika masih aktif: Tampilkan fitur input pengubahan waktu dan tombol aksi update
                         inLoadCell = `<input type="datetime-local" class="col-in-load p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['IN LOAD'])}">`;
                         outLoadCell = `<input type="datetime-local" class="col-out-load p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['OUT LOAD'])}">`;
-                        inCustCell = `<input type="datetime-local" class="col-in-cust p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['IN CUST.'])}">`;
-                        outCustCell = `<input type="datetime-local" class="col-out-cust p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['OUT CUST.'])}">`;
+                        inCustCell = `<input type="datetime-local" class="col-in-cust p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['IN CUST.'] || item['IN CUST'])}">`;
+                        outCustCell = `<input type="datetime-local" class="col-out-cust p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['OUT CUST.'] || item['OUT CUST'])}">`;
                         actionCell = `
                             <button onclick="updateRowDetails(${item.ROW_INDEX}, this)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-1 px-2.5 rounded shadow transition">
                                 Update
                             </button>`;
                     }
+
+                    // Pembersihan tampilan string tanggal order date
+                    let orderDateStr = item['ORDER DATE'] || '-';
+                    if (orderDateStr.includes('T')) orderDateStr = orderDateStr.substring(0, 10);
+                    else if (orderDateStr.length > 10) orderDateStr = orderDateStr.substring(0, 10);
                     
                     const row = `
-                        <tr class="hover:bg-gray-50 transition border-b">
-                            <td class="p-2 font-semibold text-gray-400 text-center">${finalDisplayData.length - index}</td>
-                            <td class="p-2 font-bold text-gray-900">${item.NOPOL || '-'}</td>
-                            <td class="p-2 text-xs">
-                                <div class="font-bold text-gray-800">${item['DRIVER NAME'] || '-'}</div>
-                                <div class="text-gray-500">${item.ORIGIN || '-'} → ${item.DESTINATION || '-'}</div>
+                        <tr class="hover:bg-gray-50 transition border-b text-xs">
+                            <td class="p-3 font-semibold text-gray-400 text-center">${finalDisplayData.length - index}</td>
+                            <td class="p-3 font-bold text-gray-900 whitespace-nowrap">${item.NOPOL || '-'}</td>
+                            <td class="p-3 font-medium text-gray-800 whitespace-nowrap">${item['DRIVER NAME'] || '-'}</td>
+                            <td class="p-3 text-gray-600 whitespace-nowrap">${item['NO HP'] || '-'}</td>
+                            <td class="p-3 text-gray-600 whitespace-nowrap">${item.TYPE || '-'}</td>
+                            <td class="p-3 text-gray-600 whitespace-nowrap">${orderDateStr}</td>
+                            <td class="p-3 text-gray-700 font-medium whitespace-nowrap">${item.ORIGIN || '-'}</td>
+                            <td class="p-3">${inLoadCell}</td>
+                            <td class="p-3">${outLoadCell}</td>
+                            <td class="p-3 text-gray-700 font-medium whitespace-nowrap">${item.DESTINATION || '-'}</td>
+                            <td class="p-3">${inCustCell}</td>
+                            <td class="p-3">${outCustCell}</td>
+                            <td class="p-3 font-bold text-blue-600 whitespace-nowrap">${item['STATUS 1'] || '-'}</td>
+                            <td class="p-3 text-gray-600 whitespace-nowrap">${item['UPDATE POSITION'] || '-'}</td>
+                            <td class="p-3">
+                                <span class="px-2 py-0.5 font-bold rounded-full border ${badgeClass} whitespace-nowrap">${item['STATUS 2'] || item.STATUS || '-'}</span>
                             </td>
-                            <td class="p-2">${inLoadCell}</td>
-                            <td class="p-2">${outLoadCell}</td>
-                            <td class="p-2">${inCustCell}</td>
-                            <td class="p-2">${outCustCell}</td>
-                            <td class="p-2 text-xs">
-                                <div class="font-bold text-blue-600">S1: ${item['STATUS 1'] || '-'}</div>
-                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-full border ${badgeClass}">${item['STATUS 2'] || item.STATUS || '-'}</span>
-                            </td>
-                            <td class="p-2 text-center">${actionCell}</td>
+                            <td class="p-3 text-gray-600 whitespace-nowrap">${item['TIME SB'] || '-'}</td>
+                            <td class="p-3 text-gray-500 max-w-xs truncate" title="${item.KETERANGAN || ''}">${item.KETERANGAN || '-'}</td>
+                            <td class="p-3 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 shadow-left">${actionCell}</td>
                         </tr>`;
                     tbody.innerHTML += row;
                 });
@@ -491,5 +511,11 @@
 
         window.onload = fetchDashboardData;
     </script>
+    <style>
+        /* CSS Shadow tipis untuk kolom aksi sticky agar terlihat rapi saat digulir */
+        .shadow-left {
+            box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.05);
+        }
+    </style>
 </body>
 </html>
