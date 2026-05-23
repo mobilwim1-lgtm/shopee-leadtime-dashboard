@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shopee Logistics Dashboard & Fleet System</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">
 
@@ -144,20 +143,9 @@
                         <div id="standby-fleet" class="text-3xl font-black text-blue-600 mt-1">-</div>
                     </div>
                 </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                        <h3 class="text-sm font-bold mb-3 text-gray-700">Proporsi Hub Asal (Origin)</h3>
-                        <div class="max-h-[250px] flex justify-center">
-                            <canvas id="originChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                        <h3 class="text-sm font-bold mb-3 text-gray-700">Aktivitas Armada Driver</h3>
-                        <div class="max-h-[250px]">
-                            <canvas id="driverChart"></canvas>
-                        </div>
-                    </div>
+                
+                <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl text-xs text-blue-800 leading-relaxed">
+                    💡 <strong>Tips Operasional:</strong> Gunakan form di sebelah kiri untuk mendaftarkan armada masuk pertama kali. Pembaruan 4 parameter waktu (In/Out Load & In/Out Cust) dapat dilakukan langsung secara real-time pada baris tabel monitoring di bawah ini, lalu klik tombol <strong>Update</strong>.
                 </div>
             </div>
         </div>
@@ -200,7 +188,6 @@
 
         let rawLogsData = [];
         let masterUnitsData = [];
-        let charts = {};
 
         // Ambil Data dari Google Apps Script
         async function fetchDashboardData() {
@@ -275,7 +262,6 @@
         // Helper untuk memformat string waktu Google Sheets ke format input HTML (YYYY-MM-DDTHH:mm)
         function formatForInput(dateStr) {
             if (!dateStr || dateStr.trim() === "-" || dateStr.trim() === "") return "";
-            // Mengubah spasi menjadi 'T' dan memotong hingga menit
             return dateStr.replace(' ', 'T').substring(0, 16);
         }
 
@@ -304,7 +290,7 @@
             renderInterface(rawLogsData);
         }
 
-        // Render Antarmuka Grafik dan Baris Tabel
+        // Render Antarmuka Angka Ringkasan dan Baris Tabel
         function renderInterface(data) {
             document.getElementById('total-fleet').innerText = data.length;
             const finishCount = data.filter(item => String(item['STATUS 2'] || item.STATUS || '').toUpperCase().includes('FINISH')).length;
@@ -355,8 +341,6 @@
                     tbody.innerHTML += row;
                 });
             }
-
-            renderCharts(data);
         }
 
         // FITUR LIVE UPDATE: Mengirimkan pembaruan 4 kolom waktu ke Google Sheets
@@ -371,7 +355,6 @@
             const inCust = rowEl.querySelector('.col-in-cust').value;
             const outCust = rowEl.querySelector('.col-out-cust').value;
             
-            // Susun data dengan konversi format input HTML ke format standar 24 Jam Google Sheets
             const updateData = {
                 action: "update",
                 ROW_INDEX: rowIndex,
@@ -390,7 +373,6 @@
                 });
                 
                 alert("Data Waktu Baris ini Berhasil Diperbarui di Google Sheets!");
-                // Refresh data secara berkala
                 setTimeout(fetchDashboardData, 1000);
             } catch (err) {
                 alert("Gagal memperbarui data.");
@@ -400,37 +382,7 @@
             }
         }
 
-        // Gambar Ulang Grafik Chart.js
-        function renderCharts(data) {
-            const originData = {}, driverData = {};
-            data.forEach(item => {
-                if(item.ORIGIN) originData[item.ORIGIN] = (originData[item.ORIGIN] || 0) + 1;
-                if(item['DRIVER NAME']) driverData[item['DRIVER NAME']] = (driverData[item['DRIVER NAME']] || 0) + 1;
-            });
-
-            if(charts.origin) charts.origin.destroy();
-            if(charts.driver) charts.driver.destroy();
-
-            charts.origin = new Chart(document.getElementById('originChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(originData),
-                    datasets: [{ data: Object.values(originData), backgroundColor: ['#f97316', '#3b82f6', '#10b981', '#eab308', '#a855f7'] }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-
-            charts.driver = new Chart(document.getElementById('driverChart'), {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(driverData),
-                    datasets: [{ label: 'Jumlah Trip', data: Object.values(driverData), backgroundColor: '#f97316' }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
-            });
-        }
-
-        // Submit Data Form Baru Menuju Google Sheets (Tanpa Membawa Nilai Waktu Kosong)
+        // Submit Data Form Baru Menuju Google Sheets
         async function submitForm(event) {
             event.preventDefault();
             const btn = document.getElementById('btnSubmit');
