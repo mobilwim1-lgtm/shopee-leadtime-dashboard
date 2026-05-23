@@ -78,13 +78,15 @@
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Origin</label>
-                            <input type="text" name="ORIGIN" placeholder="Asal Hub" class="w-full p-2 border border-gray-300 rounded-md outline-none" required>
+                            <input type="text" id="inputOrigin" name="ORIGIN" list="warehouseList" placeholder="Pilih/Cari Asal Hub" class="w-full p-2 border border-gray-300 rounded-md outline-none bg-blue-50 focus:ring-2 focus:ring-blue-400" autocomplete="off" required>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Destination</label>
-                            <input type="text" name="DESTINATION" placeholder="Tujuan Hub" class="w-full p-2 border border-gray-300 rounded-md outline-none" required>
+                            <input type="text" id="inputDestination" name="DESTINATION" list="warehouseList" placeholder="Pilih/Cari Tujuan Hub" class="w-full p-2 border border-gray-300 rounded-md outline-none bg-blue-50 focus:ring-2 focus:ring-blue-400" autocomplete="off" required>
                         </div>
                     </div>
+
+                    <datalist id="warehouseList"></datalist>
 
                     <div class="grid grid-cols-2 gap-2">
                         <div>
@@ -188,7 +190,7 @@
                             <th class="p-3">Status 2</th>
                             <th class="p-3">Time SB</th>
                             <th class="p-3">Keterangan</th>
-                            <th class="p-3 w-24 text-center sticky right-0 bg-gray-100 z-10 shadow-left">Aksi</th>
+                            <th class="p-3 w-24 text-center sticky right-0 bg-white z-10 shadow-left">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody" class="text-sm divide-y">
@@ -209,6 +211,7 @@
 
         let rawLogsData = [];
         let masterUnitsData = [];
+        let warehouseData = [];
 
         // Ambil Data dari Google Apps Script
         async function fetchDashboardData() {
@@ -218,11 +221,35 @@
                 
                 rawLogsData = data.logs || [];
                 masterUnitsData = data.units || [];
+                warehouseData = data.warehouses || []; // Tampung data gudang baru dari server
                 
+                populateWarehouseDatalist(warehouseData);
                 renderInterface(rawLogsData, false);
             } catch (err) {
                 console.error("Gagal sinkronisasi data:", err);
             }
+        }
+
+        // Memasukkan daftar gudang ke dalam elemen datalist HTML
+        function populateWarehouseDatalist(warehouses) {
+            const datalist = document.getElementById('warehouseList');
+            datalist.innerHTML = '';
+            
+            warehouses.forEach(wh => {
+                let name = "";
+                if (typeof wh === 'object' && wh !== null) {
+                    // Mendeteksi otomatis nama kolom header properti gudang
+                    name = wh['NAMA GUDANG'] || wh['GUDANG'] || wh['Nama Gudang'] || Object.values(wh)[0];
+                } else {
+                    name = String(wh);
+                }
+                
+                if (name && name.trim() !== "") {
+                    const option = document.createElement('option');
+                    option.value = name.trim();
+                    datalist.appendChild(option);
+                }
+            });
         }
 
         // Fitur Auto-Fill Data Driver dari Master Unit
@@ -512,7 +539,6 @@
         window.onload = fetchDashboardData;
     </script>
     <style>
-        /* CSS Shadow tipis untuk kolom aksi sticky agar terlihat rapi saat digulir */
         .shadow-left {
             box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.05);
         }
