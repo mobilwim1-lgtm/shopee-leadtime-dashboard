@@ -13,7 +13,7 @@
         <header class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-xl shadow-sm border-l-8 border-orange-500 gap-4">
             <div>
                 <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Shopee Logistics System</h1>
-                <p class="text-sm text-gray-500 mt-1">Dashboard Real-Time, Pembuatan Laporan Harian & Live Row Editor</p>
+                <p class="text-sm text-gray-500 mt-1">Dashboard Real-Time, Laporan Tampilan Langsung & Live Row Editor</p>
             </div>
             <button onclick="fetchDashboardData()" class="w-full md:w-auto bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 px-6 rounded-lg transition shadow-md flex items-center justify-center gap-2">
                 <span>🔄</span> Sinkronisasi & Refresh Data
@@ -22,19 +22,16 @@
 
         <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-wrap gap-4 items-end">
             <div class="w-full sm:w-auto flex-1 min-w-[200px]">
-                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Pilih Tanggal Mulai Laporan</label>
+                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Mulai Tanggal (In Load)</label>
                 <input type="date" id="startDate" class="w-full p-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-orange-400">
             </div>
             <div class="w-full sm:w-auto flex-1 min-w-[200px]">
-                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Pilih Tanggal Selesai Laporan</label>
+                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Sampai Tanggal (In Load)</label>
                 <input type="date" id="endDate" class="w-full p-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-orange-400">
             </div>
-            <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                <button onclick="applyDateFilter()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-md transition shadow">
+            <div class="flex gap-2 w-full sm:w-auto">
+                <button onclick="applyDateFilter()" class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-md transition shadow">
                     Filter Waktu
-                </button>
-                <button onclick="exportToCSV()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-5 rounded-md transition shadow flex items-center gap-1">
-                    📥 Unduh Laporan CSV
                 </button>
                 <button onclick="resetDateFilter()" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-md transition shadow">
                     Reset
@@ -132,19 +129,35 @@
                 </form>
             </div>
 
-            <div class="lg:col-span-2 space-y-6">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full flex flex-col justify-center">
-                    <h3 class="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
-                        💡 Panduan Pembuatan Laporan & Regulasi Sistem
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-1 flex items-center gap-2">
+                        📊 Laporan Tampilan Langsung (Data Tertera di Tabel)
                     </h3>
-                    <p class="text-sm text-gray-600 leading-relaxed mb-4">
-                        Gunakan panduan di bawah ini untuk mengelola pembatasan data operasional serta mengekstrak laporan berkala:
-                    </p>
-                    <ul class="text-xs text-gray-600 space-y-3 list-inside bg-gray-50 p-4 rounded-lg border border-gray-100">
-                        <li><strong class="text-green-600">Cara Cetak Laporan:</strong> Tentukan <em>Mulai Tanggal</em> dan <em>Sampai Tanggal</em> di bagian atas, kemudian klik <strong class="text-green-700">Unduh Laporan CSV</strong>. File laporan akan terunduh otomatis berisi data lengkap sesuai kolom spreadsheet.</li>
-                        <li><strong class="text-blue-600">Tampilan Default 3 Hari:</strong> Jika filter tidak digunakan, tabel monitoring di bawah hanya akan menampilkan riwayat data dari 3 hari operasional terbaru demi efisiensi performa page.</li>
-                        <li><strong class="text-red-600">Proteksi Status CLOSE:</strong> NOPOL dengan status <strong>CLOSE</strong> otomatis terkunci. Input pengubahan waktu beserta tombol update akan disembunyikan untuk menjaga keaslian riwayat log harian.</li>
-                    </ul>
+                    <p class="text-xs text-gray-400 mb-5">Analitik ringkasan real-time yang dihasilkan berdasarkan baris data aktif pada tabel monitoring di bawah ini.</p>
+                </div>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 my-auto">
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 text-center shadow-sm">
+                        <span class="text-[11px] font-bold text-gray-400 uppercase block tracking-wider">Total Armada</span>
+                        <span id="rep-total" class="text-2xl font-black text-gray-800 block mt-1">-</span>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-xl border border-green-100 text-center shadow-sm">
+                        <span class="text-[11px] font-bold text-green-600 uppercase block tracking-wider">Status OPEN</span>
+                        <span id="rep-open" class="text-2xl font-black text-green-700 block mt-1">-</span>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-xl border border-red-100 text-center shadow-sm">
+                        <span class="text-[11px] font-bold text-red-600 uppercase block tracking-wider">Status CLOSE</span>
+                        <span id="rep-close" class="text-2xl font-black text-red-700 block mt-1">-</span>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-center shadow-sm">
+                        <span class="text-[11px] font-bold text-blue-600 uppercase block tracking-wider">Status FINISH</span>
+                        <span id="rep-finish" class="text-2xl font-black text-blue-700 block mt-1">-</span>
+                    </div>
+                </div>
+                
+                <div class="mt-6 text-[11px] text-gray-500 bg-orange-50 p-3 rounded-lg border border-orange-100 leading-relaxed">
+                    ℹ️ <strong>Informasi Laporan:</strong> Angka kalkulasi laporan di atas akan berubah secara otomatis saat Anda menggunakan filter tanggal atau mengikuti aturan default sistem (3 hari operasional terbaru).
                 </div>
             </div>
         </div>
@@ -187,7 +200,6 @@
 
         let rawLogsData = [];
         let masterUnitsData = [];
-        let currentFilteredData = []; // Menyimpan data aktif hasil filter untuk kebutuhan laporan
 
         // Ambil Data dari Google Apps Script
         async function fetchDashboardData() {
@@ -291,11 +303,11 @@
             renderInterface(rawLogsData, false);
         }
 
-        // Render Antarmuka Tabel dengan Pembatasan Otomatis dan Cek Status CLOSE
+        // Render Antarmuka Tabel & Hitung Laporan Tampilan Langsung Secara Real-time
         function renderInterface(data, isFilteredByUser) {
             let finalDisplayData = data;
 
-            // Jika dipanggil secara bawaan (bukan filter manual user), batasi hanya 3 hari terakhir
+            // Jika tidak menggunakan filter manual, batasi bawaan hanya 3 hari terakhir
             if (!isFilteredByUser) {
                 const uniqueDates = [...new Set(data.map(item => {
                     const dateStr = item['IN LOAD'] || item['ORDER DATE'] || '';
@@ -310,8 +322,33 @@
                 });
             }
 
-            // Simpan ke data terfilter aktif agar sinkron saat diekspor ke CSV
-            currentFilteredData = finalDisplayData;
+            // --- PROSES KALKULASI LAPORAN TAMPILAN LANGSUNG ---
+            const totalArmada = finalDisplayData.length;
+            let totalOpen = 0;
+            let totalClose = 0;
+            let totalFinish = 0;
+
+            finalDisplayData.forEach(item => {
+                const s1 = String(item['STATUS 1'] || '').trim().toUpperCase();
+                const s2 = String(item['STATUS 2'] || item.STATUS || '').trim().toUpperCase();
+
+                if (s1 === 'OPEN' && s2 !== 'CLOSE') {
+                    totalOpen++;
+                }
+                if (s1 === 'CLOSE' || s2 === 'CLOSE') {
+                    totalClose++;
+                }
+                if (s2.includes('FINISH')) {
+                    totalFinish++;
+                }
+            });
+
+            // Tampilkan hasil kalkulasi langsung ke elemen Laporan di Panel Kanan
+            document.getElementById('rep-total').innerText = totalArmada;
+            document.getElementById('rep-open').innerText = totalOpen;
+            document.getElementById('rep-close').innerText = totalClose;
+            document.getElementById('rep-finish').innerText = totalFinish;
+            // --------------------------------------------------
 
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
@@ -323,7 +360,7 @@
                     const status1Val = String(item['STATUS 1'] || '').trim().toUpperCase();
                     const status2Val = String(item['STATUS 2'] || item.STATUS || '').trim().toUpperCase();
                     
-                    // VALIDASI STATUS: Apakah nopol berstatus CLOSE?
+                    // PROTEKSI STATUS: Apakah armada berstatus CLOSE?
                     const isClosed = (status1Val === 'CLOSE' || status2Val === 'CLOSE');
                     
                     const isFinish = status2Val.includes('FINISH');
@@ -334,14 +371,14 @@
                     let inLoadCell, outLoadCell, inCustCell, outCustCell, actionCell;
                     
                     if (isClosed) {
-                        // Jika berstatus CLOSE, kunci fitur pengisian (tampilkan teks biasa)
+                        // Jika CLOSE: Sembunyikan input editor waktu & tombol update (Terkunci)
                         inLoadCell = `<span class="text-gray-500 font-medium">${item['IN LOAD'] || '-'}</span>`;
                         outLoadCell = `<span class="text-gray-500 font-medium">${item['OUT LOAD'] || '-'}</span>`;
                         inCustCell = `<span class="text-gray-500 font-medium">${item['IN CUST.'] || '-'}</span>`;
                         outCustCell = `<span class="text-gray-500 font-medium">${item['OUT CUST.'] || '-'}</span>`;
                         actionCell = `<span class="text-xs text-red-500 font-bold tracking-wide bg-red-50 px-2 py-1 rounded border border-red-100">🔒 Terkunci</span>`;
                     } else {
-                        // Jika status OPEN/aktif, tampilkan komponen editor waktu & tombol update
+                        // Jika masih aktif: Tampilkan fitur input pengubahan waktu dan tombol aksi update
                         inLoadCell = `<input type="datetime-local" class="col-in-load p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['IN LOAD'])}">`;
                         outLoadCell = `<input type="datetime-local" class="col-out-load p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['OUT LOAD'])}">`;
                         inCustCell = `<input type="datetime-local" class="col-in-cust p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['IN CUST.'])}">`;
@@ -373,54 +410,6 @@
                     tbody.innerHTML += row;
                 });
             }
-        }
-
-        // FITUR GENERATOR LAPORAN: Konversi Data Terpilih ke File Eksport CSV
-        function exportToCSV() {
-            if (currentFilteredData.length === 0) {
-                alert("Tidak ada data untuk dibuatkan laporan. Silakan sesuaikan tanggal filter.");
-                return;
-            }
-
-            // Definisikan struktur header kolom persis sesuai skema database Google Sheets
-            const headers = [
-                "NOPOL", "DRIVER NAME", "NO HP", "TYPE", "ORDER DATE", 
-                "ORIGIN", "IN LOAD", "DESTINATION", "OUT LOAD", 
-                "IN CUST.", "OUT CUST.", "STATUS 1", "STATUS 2", 
-                "TIME SB", "UPDATE POSITION", "KETERANGAN"
-            ];
-
-            // Mapping baris data logistik
-            const csvRows = [];
-            csvRows.push(headers.join(",")); // Baris pertama header
-
-            currentFilteredData.forEach(item => {
-                const values = headers.map(header => {
-                    let val = item[header] || "";
-                    // Bersihkan tanda petik atau koma di dalam string untuk mencegah error pembacaan CSV
-                    val = String(val).replace(/"/g, '""');
-                    if (val.includes(",") || val.includes("\n")) {
-                        val = `"${val}"`;
-                    }
-                    return val;
-                });
-                csvRows.push(values.join(","));
-            });
-
-            // Pembuatan blob file dan trigger download otomatis ke browser
-            const csvContent = "\uFEFF" + csvRows.join("\n"); // Tambahkan BOM agar karakter terbaca baik di Excel
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            
-            // Format Nama File berdasarkan filter tanggal yang sedang aktif
-            const startLabel = document.getElementById('startDate').value || "Bawaan_Sistem";
-            link.setAttribute("href", url);
-            link.setAttribute("download", `Laporan_Logistik_Shopee_${startLabel}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
         }
 
         // FITUR LIVE UPDATE: Mengirimkan pembaruan 4 kolom waktu ke Google Sheets
