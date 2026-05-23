@@ -14,7 +14,7 @@
         <header class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-xl shadow-sm border-l-8 border-orange-500 gap-4">
             <div>
                 <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Shopee Logistics System</h1>
-                <p class="text-sm text-gray-500 mt-1">Dashboard Real-Time, Filter Rentang Waktu & Auto-Fill Data Driver</p>
+                <p class="text-sm text-gray-500 mt-1">Dashboard Real-Time, Filter Rentang Waktu & Live Row Editor</p>
             </div>
             <button onclick="fetchDashboardData()" class="w-full md:w-auto bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 px-6 rounded-lg transition shadow-md flex items-center justify-center gap-2">
                 <span>🔄</span> Sinkronisasi & Refresh Data
@@ -89,28 +89,6 @@
 
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Waktu In Load</label>
-                            <input type="datetime-local" name="IN LOAD" class="w-full p-2 border border-gray-300 rounded-md text-xs outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Waktu Out Load</label>
-                            <input type="datetime-local" name="OUT LOAD" class="w-full p-2 border border-gray-300 rounded-md text-xs outline-none">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">In Cust.</label>
-                            <input type="datetime-local" name="IN CUST." class="w-full p-2 border border-gray-300 rounded-md text-xs outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Out Cust.</label>
-                            <input type="datetime-local" name="OUT CUST." class="w-full p-2 border border-gray-300 rounded-md text-xs outline-none">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Time SB</label>
                             <input type="text" name="TIME SB" placeholder="Contoh: 21:00" class="w-full p-2 border border-gray-300 rounded-md text-sm outline-none">
                         </div>
@@ -152,7 +130,6 @@
             </div>
 
             <div class="lg:col-span-2 space-y-6">
-                
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                         <span class="text-xs font-bold text-gray-400 uppercase">Total Log Fleet</span>
@@ -188,25 +165,26 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="p-5 border-b bg-gray-50 flex justify-between items-center">
                 <h3 class="font-bold text-gray-800">📋 Monitoring Log Tabel Operasional</h3>
-                <span class="text-xs bg-orange-100 text-orange-700 font-bold px-2.5 py-1 rounded-full">Urutan Terkini Di Atas</span>
+                <span class="text-xs bg-blue-100 text-blue-700 font-bold px-2.5 py-1 rounded-full">Format Input Waktu: 24 Jam (Lokal)</span>
             </div>
-            <div class="overflow-x-auto max-h-[450px]">
-                <table class="w-full text-left border-collapse">
+            <div class="overflow-x-auto max-h-[500px]">
+                <table class="w-full text-left border-collapse min-w-[1200px]">
                     <thead>
-                        <tr class="bg-gray-100 text-xs font-bold text-gray-600 uppercase border-b sticky top-0 bg-gray-100">
-                            <th class="p-3">No</th>
-                            <th class="p-3">Nopol</th>
-                            <th class="p-3">Driver</th>
-                            <th class="p-3">Origin</th>
-                            <th class="p-3">Destination</th>
-                            <th class="p-3">Status 1</th>
-                            <th class="p-3">Status 2</th>
-                            <th class="p-3">Position</th>
+                        <tr class="bg-gray-100 text-xs font-bold text-gray-600 uppercase border-b sticky top-0 bg-gray-100 z-10">
+                            <th class="p-3 w-12 text-center">No</th>
+                            <th class="p-3 w-32">Nopol</th>
+                            <th class="p-3 w-40">Driver / Route</th>
+                            <th class="p-3">Waktu In Load (24H)</th>
+                            <th class="p-3">Waktu Out Load (24H)</th>
+                            <th class="p-3">In Cust. (24H)</th>
+                            <th class="p-3">Out Cust. (24H)</th>
+                            <th class="p-3 w-28">Status</th>
+                            <th class="p-3 w-24 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody" class="text-sm divide-y">
                         <tr>
-                            <td colspan="8" class="p-8 text-center text-gray-400 italic">Memuat data logistik...</td>
+                            <td colspan="9" class="p-8 text-center text-gray-400 italic">Memuat data logistik...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -224,7 +202,7 @@
         let masterUnitsData = [];
         let charts = {};
 
-        // 1. Ambil Data Gabungan dari Google Apps Script
+        // Ambil Data dari Google Apps Script
         async function fetchDashboardData() {
             try {
                 const response = await fetch(APPS_SCRIPT_URL);
@@ -236,11 +214,10 @@
                 renderInterface(rawLogsData);
             } catch (err) {
                 console.error("Gagal sinkronisasi data:", err);
-                alert("Gagal memuat data. Periksa kembali deployment Apps Script Anda.");
             }
         }
 
-        // 2. Fitur Otomatisasi Terintegrasi "Data Unit Total" dengan Fallback Manual
+        // Fitur Auto-Fill Data Driver dari Master Unit
         document.getElementById('inputNopol').addEventListener('input', function(e) {
             const typedNopol = e.target.value.trim().toUpperCase().replace(/\s+/g, '');
             const statusLabel = document.getElementById('autoFillStatus');
@@ -295,7 +272,14 @@
             document.getElementById('inputType').value = '';
         }
 
-        // 3. Sistem Filter Rentang Waktu (Berdasarkan Kolom IN LOAD)
+        // Helper untuk memformat string waktu Google Sheets ke format input HTML (YYYY-MM-DDTHH:mm)
+        function formatForInput(dateStr) {
+            if (!dateStr || dateStr.trim() === "-" || dateStr.trim() === "") return "";
+            // Mengubah spasi menjadi 'T' dan memotong hingga menit
+            return dateStr.replace(' ', 'T').substring(0, 16);
+        }
+
+        // Filter Rentang Waktu (Berdasarkan Kolom IN LOAD)
         function applyDateFilter() {
             const startVal = document.getElementById('startDate').value;
             const endVal = document.getElementById('endDate').value;
@@ -320,10 +304,9 @@
             renderInterface(rawLogsData);
         }
 
-        // 4. Render Komponen Visualisasi & Tabel Konten
+        // Render Antarmuka Grafik dan Baris Tabel
         function renderInterface(data) {
             document.getElementById('total-fleet').innerText = data.length;
-            // Gunakan STATUS 2 untuk ringkasan counter box
             const finishCount = data.filter(item => String(item['STATUS 2'] || item.STATUS || '').toUpperCase().includes('FINISH')).length;
             document.getElementById('finish-fleet').innerText = finishCount;
             document.getElementById('standby-fleet').innerText = data.length - finishCount;
@@ -332,7 +315,7 @@
             tbody.innerHTML = '';
             
             if(data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-gray-400 italic">Tidak ada log data logistik pada periode ini.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-gray-400 italic">Tidak ada log data logistik pada periode ini.</td></tr>`;
             } else {
                 data.slice().reverse().forEach((item, index) => {
                     const status2Val = item['STATUS 2'] || item.STATUS || '-';
@@ -341,18 +324,33 @@
                     
                     const row = `
                         <tr class="hover:bg-gray-50 transition border-b">
-                            <td class="p-3 font-semibold text-gray-400">${data.length - index}</td>
-                            <td class="p-3 font-bold text-gray-900">${item.NOPOL || '-'}</td>
-                            <td class="p-3 font-medium text-gray-700">${item['DRIVER NAME'] || '-'}</td>
-                            <td class="p-3 text-gray-600">${item.ORIGIN || '-'}</td>
-                            <td class="p-3 text-gray-600">${item.DESTINATION || '-'}</td>
-                            <td class="p-3 font-semibold text-gray-700">${item['STATUS 1'] || '-'}</td>
-                            <td class="p-3">
-                                <span class="px-2.5 py-1 text-xs font-bold rounded-full border ${badgeClass}">
-                                    ${status2Val}
-                                </span>
+                            <td class="p-2 font-semibold text-gray-400 text-center">${data.length - index}</td>
+                            <td class="p-2 font-bold text-gray-900">${item.NOPOL || '-'}</td>
+                            <td class="p-2 text-xs">
+                                <div class="font-bold text-gray-800">${item['DRIVER NAME'] || '-'}</div>
+                                <div class="text-gray-500">${item.ORIGIN || '-'} → ${item.DESTINATION || '-'}</div>
                             </td>
-                            <td class="p-3 text-xs text-gray-600 max-w-[150px] truncate">${item['UPDATE POSITION'] || '-'}</td>
+                            <td class="p-2">
+                                <input type="datetime-local" class="col-in-load p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['IN LOAD'])}">
+                            </td>
+                            <td class="p-2">
+                                <input type="datetime-local" class="col-out-load p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['OUT LOAD'])}">
+                            </td>
+                            <td class="p-2">
+                                <input type="datetime-local" class="col-in-cust p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['IN CUST.'])}">
+                            </td>
+                            <td class="p-2">
+                                <input type="datetime-local" class="col-out-cust p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['OUT CUST.'])}">
+                            </td>
+                            <td class="p-2 text-xs">
+                                <div class="font-bold text-blue-600">S1: ${item['STATUS 1'] || '-'}</div>
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-full border ${badgeClass}">${status2Val}</span>
+                            </td>
+                            <td class="p-2 text-center">
+                                <button onclick="updateRowDetails(${item.ROW_INDEX}, this)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-1 px-2.5 rounded shadow transition">
+                                    Update
+                                </button>
+                            </td>
                         </tr>`;
                     tbody.innerHTML += row;
                 });
@@ -361,12 +359,53 @@
             renderCharts(data);
         }
 
-        // 5. Gambar Ulang Grafik Chart.js
+        // FITUR LIVE UPDATE: Mengirimkan pembaruan 4 kolom waktu ke Google Sheets
+        async function updateRowDetails(rowIndex, buttonEl) {
+            const originalText = buttonEl.innerText;
+            buttonEl.innerText = "⏳...";
+            buttonEl.disabled = true;
+            
+            const rowEl = buttonEl.closest('tr');
+            const inLoad = rowEl.querySelector('.col-in-load').value;
+            const outLoad = rowEl.querySelector('.col-out-load').value;
+            const inCust = rowEl.querySelector('.col-in-cust').value;
+            const outCust = rowEl.querySelector('.col-out-cust').value;
+            
+            // Susun data dengan konversi format input HTML ke format standar 24 Jam Google Sheets
+            const updateData = {
+                action: "update",
+                ROW_INDEX: rowIndex,
+                "IN LOAD": inLoad ? inLoad.replace('T', ' ') + ':00' : "",
+                "OUT LOAD": outLoad ? outLoad.replace('T', ' ') + ':00' : "",
+                "IN CUST.": inCust ? inCust.replace('T', ' ') + ':00' : "",
+                "OUT CUST.": outCust ? outCust.replace('T', ' ') + ':00' : ""
+            };
+            
+            try {
+                await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+                
+                alert("Data Waktu Baris ini Berhasil Diperbarui di Google Sheets!");
+                // Refresh data secara berkala
+                setTimeout(fetchDashboardData, 1000);
+            } catch (err) {
+                alert("Gagal memperbarui data.");
+                console.error(err);
+                buttonEl.innerText = originalText;
+                buttonEl.disabled = false;
+            }
+        }
+
+        // Gambar Ulang Grafik Chart.js
         function renderCharts(data) {
             const originData = {}, driverData = {};
             data.forEach(item => {
                 if(item.ORIGIN) originData[item.ORIGIN] = (originData[item.ORIGIN] || 0) + 1;
-                if(item['DRIVER NAME']) driverData[item['DRIVER NAME']] = (driverData[item['DRIVER NAME'] || ''] || 0) + 1;
+                if(item['DRIVER NAME']) driverData[item['DRIVER NAME']] = (driverData[item['DRIVER NAME']] || 0) + 1;
             });
 
             if(charts.origin) charts.origin.destroy();
@@ -391,23 +430,18 @@
             });
         }
 
-        // 6. Submit Data Form Menuju Google Sheets via API Apps Script
+        // Submit Data Form Baru Menuju Google Sheets (Tanpa Membawa Nilai Waktu Kosong)
         async function submitForm(event) {
             event.preventDefault();
             const btn = document.getElementById('btnSubmit');
-            btn.innerText = "⏳ Menyimpan Ke Google Sheets...";
+            btn.innerText = "⏳ Menyimpan...";
             btn.disabled = true;
 
             const formData = new FormData(event.target);
             const formObject = {};
             
             formData.forEach((value, key) => {
-                // Format tanggal & waktu khusus agar rapi dibaca Google Sheet
-                if(['IN LOAD', 'OUT LOAD', 'IN CUST.', 'OUT CUST.'].includes(key) && value) {
-                    formObject[key] = value.replace('T', ' ') + ':00';
-                } else {
-                    formObject[key] = value;
-                }
+                formObject[key] = value;
             });
 
             try {
@@ -418,7 +452,7 @@
                     body: JSON.stringify(formObject)
                 });
 
-                alert("Data Logistik Berhasil Ditambahkan ke Google Sheets!");
+                alert("Data Logistik Baru Berhasil Ditambahkan!");
                 document.getElementById('logisticForm').reset();
                 clearAutoFillFields();
                 toggleFieldsEditable(true);
