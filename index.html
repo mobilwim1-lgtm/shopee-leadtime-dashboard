@@ -5,6 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shopee Logistics Dashboard & Fleet System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Pengaturan Khusus untuk Cetak Landscape Full Otomatis */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #landscapeModal, #landscapeModal * {
+                visibility: visible;
+            }
+            #landscapeModal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: auto;
+                padding: 0;
+                margin: 0;
+                background: white;
+            }
+            @page {
+                size: landscape;
+                margin: 0.4cm;
+            }
+        }
+        .shadow-left {
+            box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.05);
+        }
+    </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">
 
@@ -29,9 +57,12 @@
                 <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Sampai Tanggal (In Load)</label>
                 <input type="date" id="endDate" class="w-full p-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-orange-400">
             </div>
-            <div class="flex gap-2 w-full sm:w-auto">
+            <div class="flex flex-wrap gap-2 w-full sm:w-auto">
                 <button onclick="applyDateFilter()" class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-md transition shadow">
                     Filter Waktu
+                </button>
+                <button onclick="openLandscapeView()" class="flex-1 sm:flex-none bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-md transition shadow flex items-center justify-center gap-1">
+                    👁️ View Landscape
                 </button>
                 <button onclick="resetDateFilter()" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-md transition shadow">
                     Reset
@@ -85,7 +116,6 @@
                             <input type="text" id="inputDestination" name="DESTINATION" list="warehouseList" placeholder="Pilih/Cari Tujuan Hub" class="w-full p-2 border border-gray-300 rounded-md outline-none bg-blue-50 focus:ring-2 focus:ring-blue-400" autocomplete="off" required>
                         </div>
                     </div>
-
                     <datalist id="warehouseList"></datalist>
 
                     <div class="grid grid-cols-2 gap-2">
@@ -203,6 +233,53 @@
         </div>
     </div>
 
+    <div id="landscapeModal" class="hidden fixed inset-0 bg-white z-50 overflow-auto p-6 flex flex-col">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center pb-4 mb-4 border-b border-gray-200 print:hidden gap-3">
+            <div>
+                <h2 class="text-2xl font-black text-gray-900 flex items-center gap-2">
+                    📋 Tampilan Monitor Luas (Mode Landscape Full)
+                </h2>
+                <p class="text-xs text-gray-500 mt-0.5">Menampilkan seluruh detail kolom data yang difilter secara utuh tanpa pemotongan teks.</p>
+            </div>
+            <div class="flex gap-2 w-full md:w-auto">
+                <button onclick="window.print()" class="flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white font-bold text-sm py-2 px-5 rounded-md shadow transition flex items-center justify-center gap-1">
+                    🖨️ Cetak / Simpan PDF
+                </button>
+                <button onclick="closeLandscapeView()" class="flex-1 md:flex-none bg-gray-600 hover:bg-gray-700 text-white font-bold text-sm py-2 px-5 rounded-md shadow transition">
+                    ❌ Tutup Tampilan
+                </button>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto flex-1">
+            <table class="w-full text-left border-collapse border border-gray-300 min-w-[2300px] bg-white text-[11px]">
+                <thead>
+                    <tr class="bg-gray-900 text-white font-bold uppercase border-b text-center">
+                        <th class="p-2 border border-gray-300 w-10">No</th>
+                        <th class="p-2 border border-gray-300">Nopol</th>
+                        <th class="p-2 border border-gray-300">Nama Driver</th>
+                        <th class="p-2 border border-gray-300">No HP</th>
+                        <th class="p-2 border border-gray-300">Type</th>
+                        <th class="p-2 border border-gray-300">Order Date</th>
+                        <th class="p-2 border border-gray-300">Origin</th>
+                        <th class="p-2 border border-gray-300">In Load</th>
+                        <th class="p-2 border border-gray-300">Out Load</th>
+                        <th class="p-2 border border-gray-300">Destination</th>
+                        <th class="p-2 border border-gray-300">In Cust</th>
+                        <th class="p-2 border border-gray-300">Out Cust</th>
+                        <th class="p-2 border border-gray-300">Status 1</th>
+                        <th class="p-2 border border-gray-300">Update Position</th>
+                        <th class="p-2 border border-gray-300">Status 2</th>
+                        <th class="p-2 border border-gray-300">Time SB</th>
+                        <th class="p-2 border border-gray-300">Keterangan</th>
+                    </tr>
+                </thead>
+                <tbody id="landscapeTableBody" class="divide-y divide-gray-300 text-gray-800">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
     <script>
         // ==========================================
         // WAJIB GANTI URL DI BAWAH INI DENGAN WEB APP URL ANDA:
@@ -212,8 +289,8 @@
         let rawLogsData = [];
         let masterUnitsData = [];
         let warehouseData = [];
+        let currentFilteredData = []; // Menyimpan data logistik aktif hasil filter tanggal
 
-        // Ambil Data dari Google Apps Script
         async function fetchDashboardData() {
             try {
                 const response = await fetch(APPS_SCRIPT_URL);
@@ -221,7 +298,7 @@
                 
                 rawLogsData = data.logs || [];
                 masterUnitsData = data.units || [];
-                warehouseData = data.warehouses || []; // Tampung data gudang baru dari server
+                warehouseData = data.warehouses || [];
                 
                 populateWarehouseDatalist(warehouseData);
                 renderInterface(rawLogsData, false);
@@ -230,20 +307,16 @@
             }
         }
 
-        // Memasukkan daftar gudang ke dalam elemen datalist HTML
         function populateWarehouseDatalist(warehouses) {
             const datalist = document.getElementById('warehouseList');
             datalist.innerHTML = '';
-            
             warehouses.forEach(wh => {
                 let name = "";
                 if (typeof wh === 'object' && wh !== null) {
-                    // Mendeteksi otomatis nama kolom header properti gudang
                     name = wh['NAMA GUDANG'] || wh['GUDANG'] || wh['Nama Gudang'] || Object.values(wh)[0];
                 } else {
                     name = String(wh);
                 }
-                
                 if (name && name.trim() !== "") {
                     const option = document.createElement('option');
                     option.value = name.trim();
@@ -252,7 +325,7 @@
             });
         }
 
-        // Fitur Auto-Fill Data Driver dari Master Unit
+        // Auto-Fill Data Driver
         document.getElementById('inputNopol').addEventListener('input', function(e) {
             const typedNopol = e.target.value.trim().toUpperCase().replace(/\s+/g, '');
             const statusLabel = document.getElementById('autoFillStatus');
@@ -274,7 +347,6 @@
                 document.getElementById('inputDriver').value = match['DRIVER NAME'] || '';
                 document.getElementById('inputHp').value = match['NO HP'] || '';
                 document.getElementById('inputType').value = match['TYPE'] || '';
-                
                 statusLabel.innerText = "✅ Data unit ditemukan otomatis dari master!";
                 statusLabel.className = "text-xs text-green-600 mt-1 font-semibold";
                 toggleFieldsEditable(false);
@@ -307,13 +379,11 @@
             document.getElementById('inputType').value = '';
         }
 
-        // Helper untuk memformat string waktu Google Sheets ke format input HTML (YYYY-MM-DDTHH:mm)
         function formatForInput(dateStr) {
             if (!dateStr || dateStr.trim() === "-" || dateStr.trim() === "") return "";
             return dateStr.replace(' ', 'T').substring(0, 16);
         }
 
-        // Filter Rentang Waktu Manual oleh User
         function applyDateFilter() {
             const startVal = document.getElementById('startDate').value;
             const endVal = document.getElementById('endDate').value;
@@ -333,18 +403,15 @@
             renderInterface(filtered, true);
         }
 
-        // Reset Filter Tanggal
         function resetDateFilter() {
             document.getElementById('startDate').value = '';
             document.getElementById('endDate').value = '';
             renderInterface(rawLogsData, false);
         }
 
-        // Render Antarmuka Tabel & Hitung Laporan Tampilan Langsung Secara Real-time
         function renderInterface(data, isFilteredByUser) {
             let finalDisplayData = data;
 
-            // Jika tidak menggunakan filter manual, batasi bawaan hanya 3 hari terakhir
             if (!isFilteredByUser) {
                 const uniqueDates = [...new Set(data.map(item => {
                     const dateStr = item['IN LOAD'] || item['ORDER DATE'] || '';
@@ -359,33 +426,25 @@
                 });
             }
 
-            // --- PROSES KALKULASI LAPORAN TAMPILAN LANGSUNG ---
+            // Simpan ke variabel global agar sinkron dengan Tombol View Landscape
+            currentFilteredData = finalDisplayData;
+
+            // HITUNG LAPORAN TAMPILAN LANGSUNG
             const totalArmada = finalDisplayData.length;
-            let totalOpen = 0;
-            let totalClose = 0;
-            let totalFinish = 0;
+            let totalOpen = 0; let totalClose = 0; let totalFinish = 0;
 
             finalDisplayData.forEach(item => {
                 const s1 = String(item['STATUS 1'] || '').trim().toUpperCase();
                 const s2 = String(item['STATUS 2'] || item.STATUS || '').trim().toUpperCase();
-
-                if (s1 === 'OPEN' && s2 !== 'CLOSE') {
-                    totalOpen++;
-                }
-                if (s1 === 'CLOSE' || s2 === 'CLOSE') {
-                    totalClose++;
-                }
-                if (s2.includes('FINISH')) {
-                    totalFinish++;
-                }
+                if (s1 === 'OPEN' && s2 !== 'CLOSE') totalOpen++;
+                if (s1 === 'CLOSE' || s2 === 'CLOSE') totalClose++;
+                if (s2.includes('FINISH')) totalFinish++;
             });
 
-            // Tampilkan hasil kalkulasi langsung ke elemen Laporan di Panel Kanan
             document.getElementById('rep-total').innerText = totalArmada;
             document.getElementById('rep-open').innerText = totalOpen;
             document.getElementById('rep-close').innerText = totalClose;
             document.getElementById('rep-finish').innerText = totalFinish;
-            // --------------------------------------------------
 
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
@@ -396,11 +455,9 @@
                 finalDisplayData.slice().reverse().forEach((item, index) => {
                     const status1Val = String(item['STATUS 1'] || '').trim().toUpperCase();
                     const status2Val = String(item['STATUS 2'] || item.STATUS || '').trim().toUpperCase();
-                    
-                    // PROTEKSI STATUS: Apakah armada berstatus CLOSE?
                     const isClosed = (status1Val === 'CLOSE' || status2Val === 'CLOSE');
-                    
                     const isFinish = status2Val.includes('FINISH');
+                    
                     let badgeClass = 'bg-yellow-100 text-yellow-700 border-yellow-200';
                     if (isFinish) badgeClass = 'bg-green-100 text-green-700 border-green-200';
                     if (isClosed) badgeClass = 'bg-red-100 text-red-700 border-red-200';
@@ -408,25 +465,19 @@
                     let inLoadCell, outLoadCell, inCustCell, outCustCell, actionCell;
                     
                     if (isClosed) {
-                        // Jika CLOSE: Sembunyikan input editor waktu & tombol update (Terkunci)
                         inLoadCell = `<span class="text-gray-500 font-medium">${item['IN LOAD'] || '-'}</span>`;
                         outLoadCell = `<span class="text-gray-500 font-medium">${item['OUT LOAD'] || '-'}</span>`;
                         inCustCell = `<span class="text-gray-500 font-medium">${item['IN CUST.'] || item['IN CUST'] || '-'}</span>`;
                         outCustCell = `<span class="text-gray-500 font-medium">${item['OUT CUST.'] || item['OUT CUST'] || '-'}</span>`;
                         actionCell = `<span class="text-xs text-red-500 font-bold tracking-wide bg-red-50 px-2 py-1 rounded border border-red-100">🔒 Terkunci</span>`;
                     } else {
-                        // Jika masih aktif: Tampilkan fitur input pengubahan waktu dan tombol aksi update
                         inLoadCell = `<input type="datetime-local" class="col-in-load p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['IN LOAD'])}">`;
                         outLoadCell = `<input type="datetime-local" class="col-out-load p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['OUT LOAD'])}">`;
                         inCustCell = `<input type="datetime-local" class="col-in-cust p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['IN CUST.'] || item['IN CUST'])}">`;
                         outCustCell = `<input type="datetime-local" class="col-out-cust p-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-400 outline-none w-40 font-sans" value="${formatForInput(item['OUT CUST.'] || item['OUT CUST'])}">`;
-                        actionCell = `
-                            <button onclick="updateRowDetails(${item.ROW_INDEX}, this)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-1 px-2.5 rounded shadow transition">
-                                Update
-                            </button>`;
+                        actionCell = `<button onclick="updateRowDetails(${item.ROW_INDEX}, this)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-1 px-2.5 rounded shadow transition">Update</button>`;
                     }
 
-                    // Pembersihan tampilan string tanggal order date
                     let orderDateStr = item['ORDER DATE'] || '-';
                     if (orderDateStr.includes('T')) orderDateStr = orderDateStr.substring(0, 10);
                     else if (orderDateStr.length > 10) orderDateStr = orderDateStr.substring(0, 10);
@@ -447,9 +498,7 @@
                             <td class="p-3">${outCustCell}</td>
                             <td class="p-3 font-bold text-blue-600 whitespace-nowrap">${item['STATUS 1'] || '-'}</td>
                             <td class="p-3 text-gray-600 whitespace-nowrap">${item['UPDATE POSITION'] || '-'}</td>
-                            <td class="p-3">
-                                <span class="px-2 py-0.5 font-bold rounded-full border ${badgeClass} whitespace-nowrap">${item['STATUS 2'] || item.STATUS || '-'}</span>
-                            </td>
+                            <td class="p-3"><span class="px-2 py-0.5 font-bold rounded-full border ${badgeClass} whitespace-nowrap">${item['STATUS 2'] || item.STATUS || '-'}</span></td>
                             <td class="p-3 text-gray-600 whitespace-nowrap">${item['TIME SB'] || '-'}</td>
                             <td class="p-3 text-gray-500 max-w-xs truncate" title="${item.KETERANGAN || ''}">${item.KETERANGAN || '-'}</td>
                             <td class="p-3 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 shadow-left">${actionCell}</td>
@@ -459,7 +508,54 @@
             }
         }
 
-        // FITUR LIVE UPDATE: Mengirimkan pembaruan 4 kolom waktu ke Google Sheets
+        // LOGIKA MEMBUKA VIEW MODE LANDSCAPE FULL
+        function openLandscapeView() {
+            const modal = document.getElementById('landscapeModal');
+            const tbody = document.getElementById('landscapeTableBody');
+            tbody.innerHTML = '';
+            
+            if (currentFilteredData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="17" class="p-8 text-center text-gray-400 italic font-medium">Tidak ada baris data logistik untuk ditampilkan. Silakan sesuaikan filter tanggal.</td></tr>`;
+            } else {
+                currentFilteredData.slice().reverse().forEach((item, index) => {
+                    let orderDateStr = item['ORDER DATE'] || '-';
+                    if (orderDateStr.includes('T')) orderDateStr = orderDateStr.substring(0, 10);
+                    else if (orderDateStr.length > 10) orderDateStr = orderDateStr.substring(0, 10);
+
+                    // Mode view menyajikan data teks bersih (tanpa komponen input kotak) agar tidak terpotong
+                    const row = `
+                        <tr class="hover:bg-gray-50 transition text-center border-b border-gray-300">
+                            <td class="p-2.5 border border-gray-300 font-bold text-gray-400">${currentFilteredData.length - index}</td>
+                            <td class="p-2.5 border border-gray-300 font-black text-gray-900 text-left whitespace-nowrap">${item.NOPOL || '-'}</td>
+                            <td class="p-2.5 border border-gray-300 font-bold text-gray-800 text-left whitespace-nowrap">${item['DRIVER NAME'] || '-'}</td>
+                            <td class="p-2.5 border border-gray-300 text-gray-700 whitespace-nowrap">${item['NO HP'] || '-'}</td>
+                            <td class="p-2.5 border border-gray-300 text-gray-600 whitespace-nowrap">${item.TYPE || '-'}</td>
+                            <td class="p-2.5 border border-gray-300 text-gray-600 whitespace-nowrap">${orderDateStr}</td>
+                            <td class="p-2.5 border border-gray-300 font-semibold text-blue-800 text-left whitespace-nowrap">${item.ORIGIN || '-'}</td>
+                            <td class="p-2.5 border border-gray-300 text-gray-800 font-medium bg-gray-50 whitespace-nowrap">${item['IN LOAD'] || '-'}</td>
+                            <td class="p-2.5 border border-gray-300 text-gray-800 font-medium bg-gray-50 whitespace-nowrap">${item['OUT LOAD'] || '-'}</td>
+                            <td class="p-2.5 border border-gray-300 font-semibold text-orange-800 text-left whitespace-nowrap">${item.DESTINATION || '-'}</td>
+                            <td class="p-2.5 border border-gray-300 text-gray-800 font-medium bg-blue-50/30 whitespace-nowrap">${item['IN CUST.'] || item['IN CUST'] || '-'}</td>
+                            <td class="p-2.5 border border-gray-300 text-gray-800 font-medium bg-blue-50/30 whitespace-nowrap">${item['OUT CUST.'] || item['OUT CUST'] || '-'}</td>
+                            <td class="p-2.5 border border-gray-300 font-extrabold text-blue-600 whitespace-nowrap">${item['STATUS 1'] || '-'}</td>
+                            <td class="p-2.5 border border-gray-300 text-gray-700 text-left whitespace-nowrap">${item['UPDATE POSITION'] || '-'}</td>
+                            <td class="p-2.5 border border-gray-300 font-extrabold text-orange-600 whitespace-nowrap">${item['STATUS 2'] || item.STATUS || '-'}</td>
+                            <td class="p-2.5 border border-gray-300 text-gray-600 whitespace-nowrap">${item['TIME SB'] || '-'}</td>
+                            <td class="p-2.5 border border-gray-300 text-gray-700 text-left break-words max-w-sm font-medium">${item.KETERANGAN || '-'}</td>
+                        </tr>`;
+                    tbody.innerHTML += row;
+                });
+            }
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden'); // Kunci scroll halaman belakang
+        }
+
+        function closeLandscapeView() {
+            document.getElementById('landscapeModal').classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        // Live Update Baris Waktu
         async function updateRowDetails(rowIndex, buttonEl) {
             const originalText = buttonEl.innerText;
             buttonEl.innerText = "⏳...";
@@ -487,7 +583,6 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(updateData)
                 });
-                
                 alert("Data Waktu Baris ini Berhasil Diperbarui di Google Sheets!");
                 setTimeout(fetchDashboardData, 1000);
             } catch (err) {
@@ -498,7 +593,7 @@
             }
         }
 
-        // Submit Data Form Baru Menuju Google Sheets
+        // Submit Data Form Baru
         async function submitForm(event) {
             event.preventDefault();
             const btn = document.getElementById('btnSubmit');
@@ -507,10 +602,7 @@
 
             const formData = new FormData(event.target);
             const formObject = {};
-            
-            formData.forEach((value, key) => {
-                formObject[key] = value;
-            });
+            formData.forEach((value, key) => { formObject[key] = value; });
 
             try {
                 await fetch(APPS_SCRIPT_URL, {
@@ -525,7 +617,6 @@
                 clearAutoFillFields();
                 toggleFieldsEditable(true);
                 document.getElementById('autoFillStatus').innerText = "Ketik nopol terdaftar...";
-                
                 setTimeout(fetchDashboardData, 1500);
             } catch (err) {
                 alert("Gagal mengirimkan data ke Google Sheet.");
@@ -538,10 +629,5 @@
 
         window.onload = fetchDashboardData;
     </script>
-    <style>
-        .shadow-left {
-            box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.05);
-        }
-    </style>
 </body>
 </html>
