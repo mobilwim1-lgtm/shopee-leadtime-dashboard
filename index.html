@@ -1,37 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopee Logistics Dynamic Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Shopee Logistics Dashboard & Fleet System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">
 
     <div class="container mx-auto p-4 lg:p-8">
+        
         <header class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-xl shadow-sm border-l-8 border-orange-500 gap-4">
             <div>
                 <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Shopee Logistics System</h1>
-                <p class="text-sm text-gray-500 mt-1">Dashboard Interaktif & Manajemen Fleet Otomatis via Google Sheets</p>
+                <p class="text-sm text-gray-500 mt-1">Dashboard Real-Time, Filter Rentang Waktu & Auto-Fill Data Driver</p>
             </div>
-            <button onclick="fetchDashboardData()" class="w-full md:w-auto bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 px-6 rounded-lg transition shadow-md">
-                🔄 Refresh Data
+            <button onclick="fetchDashboardData()" class="w-full md:w-auto bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 px-6 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+                <span>🔄</span> Sinkronisasi & Refresh Data
             </button>
         </header>
 
         <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-wrap gap-4 items-end">
-            <div class="w-full sm:w-auto">
+            <div class="w-full sm:w-auto flex-1 min-w-[200px]">
                 <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Mulai Tanggal (In Load)</label>
-                <input type="date" id="startDate" class="w-full p-2 border rounded-md outline-none focus:ring-2 focus:ring-orange-400">
+                <input type="date" id="startDate" class="w-full p-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-orange-400">
             </div>
-            <div class="w-full sm:w-auto">
+            <div class="w-full sm:w-auto flex-1 min-w-[200px]">
                 <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Sampai Tanggal (In Load)</label>
-                <input type="date" id="endDate" class="w-full p-2 border rounded-md outline-none focus:ring-2 focus:ring-orange-400">
+                <input type="date" id="endDate" class="w-full p-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-orange-400">
             </div>
             <div class="flex gap-2 w-full sm:w-auto">
-                <button onclick="applyDateFilter()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-md transition shadow">
-                    🔍 Filter Waktu
+                <button onclick="applyDateFilter()" class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-md transition shadow">
+                    Filter Waktu
                 </button>
                 <button onclick="resetDateFilter()" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-md transition shadow">
                     Reset
@@ -47,60 +48,65 @@
                 </h2>
                 <form id="logisticForm" onsubmit="submitForm(event)" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Nopol Kendaraan (Ketik untuk Auto-fill)</label>
-                        <input type="text" id="inputNopol" name="NOPOL" placeholder="Contoh: B 9505 TEX" class="w-full p-2 border border-orange-300 bg-orange-50 font-bold rounded-md focus:ring-2 focus:ring-orange-400 outline-none" required>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Nopol Kendaraan</label>
+                        <input type="text" id="inputNopol" name="NOPOL" placeholder="Contoh: B 9505 TEX" class="w-full p-2.5 border border-orange-300 bg-orange-50 font-bold rounded-md focus:ring-2 focus:ring-orange-400 outline-none uppercase" required>
                         <p id="autoFillStatus" class="text-xs text-gray-400 mt-1 italic">Ketik nopol terdaftar...</p>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Nama Driver</label>
-                        <input type="text" id="inputDriver" name="DRIVER NAME" placeholder="Otomatis Terisi..." class="w-full p-2 border rounded-md bg-gray-50 outline-none" required>
+                        <input type="text" id="inputDriver" name="DRIVER NAME" placeholder="Otomatis terisi / isi manual..." class="w-full p-2 border border-gray-300 rounded-md outline-none" required>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">No HP</label>
-                            <input type="text" id="inputHp" name="NO HP" placeholder="Otomatis Terisi..." class="w-full p-2 border rounded-md bg-gray-50 outline-none">
+                            <input type="text" id="inputHp" name="NO HP" placeholder="No HP..." class="w-full p-2 border border-gray-300 rounded-md outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Type Truk</label>
-                            <input type="text" id="inputType" name="TYPE" placeholder="Otomatis..." class="w-full p-2 border rounded-md bg-gray-50 outline-none">
+                            <input type="text" id="inputType" name="TYPE" placeholder="Tipe truk..." class="w-full p-2 border border-gray-300 rounded-md outline-none">
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Origin</label>
-                            <input type="text" name="ORIGIN" placeholder="Asal Hub" class="w-full p-2 border rounded-md outline-none" required>
+                            <input type="text" name="ORIGIN" placeholder="Asal Hub" class="w-full p-2 border border-gray-300 rounded-md outline-none" required>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Destination</label>
-                            <input type="text" name="DESTINATION" placeholder="Tujuan Hub" class="w-full p-2 border rounded-md outline-none" required>
+                            <input type="text" name="DESTINATION" placeholder="Tujuan Hub" class="w-full p-2 border border-gray-300 rounded-md outline-none" required>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">In Load</label>
-                            <input type="datetime-local" name="IN LOAD" class="w-full p-2 border rounded-md text-sm outline-none">
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Waktu In Load</label>
+                            <input type="datetime-local" name="IN LOAD" class="w-full p-2 border border-gray-300 rounded-md text-sm outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Out Load</label>
-                            <input type="datetime-local" name="OUT LOAD" class="w-full p-2 border rounded-md text-sm outline-none">
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Waktu Out Load</label>
+                            <input type="datetime-local" name="OUT LOAD" class="w-full p-2 border border-gray-300 rounded-md text-sm outline-none">
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Status Utama</label>
-                        <select name="STATUS" class="w-full p-2 border rounded-md outline-none">
+                        <select name="STATUS" class="w-full p-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-orange-400 font-medium">
                             <option value="FINISH DO">FINISH DO</option>
                             <option value="ANTRI LOADING">ANTRI LOADING</option>
                             <option value="ANTRI MUAT">ANTRI MUAT</option>
                             <option value="OPEN">OPEN</option>
                         </select>
                     </div>
-                    <button type="submit" id="btnSubmit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg transition shadow">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Keterangan Opsional</label>
+                        <textarea name="KETERANGAN" rows="2" placeholder="Catatan operasional..." class="w-full p-2 border border-gray-300 rounded-md text-sm outline-none"></textarea>
+                    </div>
+                    <button type="submit" id="btnSubmit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg transition shadow-md">
                         💾 Simpan ke Google Sheet
                     </button>
                 </form>
             </div>
 
             <div class="lg:col-span-2 space-y-6">
+                
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                         <span class="text-xs font-bold text-gray-400 uppercase">Total Log Fleet</span>
@@ -119,24 +125,29 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                         <h3 class="text-sm font-bold mb-3 text-gray-700">Proporsi Hub Asal (Origin)</h3>
-                        <canvas id="originChart"></canvas>
+                        <div class="max-h-[250px] flex justify-center">
+                            <canvas id="originChart"></canvas>
+                        </div>
                     </div>
                     <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                         <h3 class="text-sm font-bold mb-3 text-gray-700">Aktivitas Armada Driver</h3>
-                        <canvas id="driverChart"></canvas>
+                        <div class="max-h-[250px]">
+                            <canvas id="driverChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="p-5 border-b bg-gray-50">
+            <div class="p-5 border-b bg-gray-50 flex justify-between items-center">
                 <h3 class="font-bold text-gray-800">📋 Monitoring Log Tabel Operasional</h3>
+                <span class="text-xs bg-orange-100 text-orange-700 font-bold px-2.5 py-1 rounded-full">Urutan Terkini Di Atas</span>
             </div>
-            <div class="overflow-x-auto max-h-96">
+            <div class="overflow-x-auto max-h-[450px]">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-gray-100 text-xs font-bold text-gray-600 uppercase border-b">
+                        <tr class="bg-gray-100 text-xs font-bold text-gray-600 uppercase border-b sticky top-0 bg-gray-100">
                             <th class="p-3">No</th>
                             <th class="p-3">Nopol</th>
                             <th class="p-3">Driver</th>
@@ -145,20 +156,27 @@
                             <th class="p-3">Status</th>
                         </tr>
                     </thead>
-                    <tbody id="tableBody" class="text-sm divide-y"></tbody>
+                    <tbody id="tableBody" class="text-sm divide-y">
+                        <tr>
+                            <td colspan="6" class="p-8 text-center text-gray-400 italic">Memuat data logistik...</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
     </div>
 
     <script>
-        // GANTI DENGAN URL WEB APP APPS SCRIPT ANDA YANG BARU
+        // ==========================================
+        // WAJIB GANTI URL DI BAWAH INI DENGAN WEB APP URL ANDA:
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhLowM9ffwffPA-ssTLpvTzzWRDYVFrek1ySj_jZljgoVQlxB4WX8lep_fbF38687Yug/exec";
+        // ==========================================
 
         let rawLogsData = [];
         let masterUnitsData = [];
         let charts = {};
 
+        // 1. Ambil Data Gabungan dari Google Apps Script
         async function fetchDashboardData() {
             try {
                 const response = await fetch(APPS_SCRIPT_URL);
@@ -167,14 +185,14 @@
                 rawLogsData = data.logs || [];
                 masterUnitsData = data.units || [];
                 
-                // Tampilkan data awal secara penuh
                 renderInterface(rawLogsData);
             } catch (err) {
                 console.error("Gagal sinkronisasi data:", err);
+                alert("Gagal memuat data. Periksa kembali deployment Apps Script Anda.");
             }
         }
 
-        // FITUR OTOMATISASI: Deteksi Input Nopol & Auto-Fill Terintegrasi Sheet "Data Unit Total"
+        // 2. Fitur Otomatisasi Terintegrasi "Data Unit Total" dengan Fallback Manual
         document.getElementById('inputNopol').addEventListener('input', function(e) {
             const typedNopol = e.target.value.trim().toUpperCase().replace(/\s+/g, '');
             const statusLabel = document.getElementById('autoFillStatus');
@@ -183,10 +201,11 @@
                 clearAutoFillFields();
                 statusLabel.innerText = "Ketik nopol terdaftar...";
                 statusLabel.className = "text-xs text-gray-400 mt-1 italic";
+                toggleFieldsEditable(true);
                 return;
             }
 
-            // Cari nopol yang cocok di database master "Data Unit Total" (abaikan spasi saat mencocokkan)
+            // Cari kecocokan di database sheet "Data Unit Total" (tanpa spasi)
             const match = masterUnitsData.find(unit => {
                 const cleanSheetNopol = String(unit['NOPOL'] || '').trim().toUpperCase().replace(/\s+/g, '');
                 return cleanSheetNopol === typedNopol;
@@ -197,14 +216,32 @@
                 document.getElementById('inputHp').value = match['NO HP'] || '';
                 document.getElementById('inputType').value = match['TYPE'] || '';
                 
-                statusLabel.innerText = "✅ Data unit ditemukan otomatis!";
+                statusLabel.innerText = "✅ Data unit ditemukan otomatis dari master!";
                 statusLabel.className = "text-xs text-green-600 mt-1 font-semibold";
+                toggleFieldsEditable(false); // Kunci agar tidak salah ketik
             } else {
-                clearAutoFillFields();
-                statusLabel.innerText = "⚠️ Nopol belum terdaftar di 'Data Unit Total'";
-                statusLabel.className = "text-xs text-red-500 mt-1 italic";
+                // FALLBACK: Nopol baru / tidak terdaftar -> Buka kunci agar bisa diketik manual
+                statusLabel.innerText = "⚠️ Nopol belum terdaftar di 'Data Unit Total'. Silakan isi MANUAL:";
+                statusLabel.className = "text-xs text-orange-500 mt-1 font-semibold italic";
+                toggleFieldsEditable(true); 
             }
         });
+
+        function toggleFieldsEditable(isEditable) {
+            const fields = ['inputDriver', 'inputHp', 'inputType'];
+            fields.forEach(id => {
+                const el = document.getElementById(id);
+                if (isEditable) {
+                    el.removeAttribute('readonly');
+                    el.classList.remove('bg-gray-100', 'text-gray-500');
+                    el.classList.add('bg-white');
+                } else {
+                    el.setAttribute('readonly', true);
+                    el.classList.remove('bg-white');
+                    el.classList.add('bg-gray-100', 'text-gray-500');
+                }
+            });
+        }
 
         function clearAutoFillFields() {
             document.getElementById('inputDriver').value = '';
@@ -212,20 +249,19 @@
             document.getElementById('inputType').value = '';
         }
 
-        // FITUR BARU: Filter Rentang Waktu (Berdasarkan Kolom IN LOAD)
+        // 3. Sistem Filter Rentang Waktu
         function applyDateFilter() {
             const startVal = document.getElementById('startDate').value;
             const endVal = document.getElementById('endDate').value;
 
             if (!startVal || !endVal) {
-                alert("Silakan pilih kedua rentang tanggal terlebih dahulu.");
+                alert("Harap pilih tanggal mulai dan selesai terlebih dahulu.");
                 return;
             }
 
             const filtered = rawLogsData.filter(item => {
                 if (!item['IN LOAD']) return false;
-                // Ambil string tanggal YYYY-MM-DD dari format date log
-                const itemDate = item['IN LOAD'].substring(0, 10); 
+                const itemDate = item['IN LOAD'].substring(0, 10); // Format YYYY-MM-DD
                 return itemDate >= startVal && itemDate <= endVal;
             });
 
@@ -238,37 +274,45 @@
             renderInterface(rawLogsData);
         }
 
+        // 4. Render Komponen Visualisasi & Tabel Konten
         function renderInterface(data) {
-            // Update Stats Cards
+            // Update Ringkasan Angka Utama
             document.getElementById('total-fleet').innerText = data.length;
             const finishCount = data.filter(item => String(item.STATUS).toUpperCase().includes('FINISH')).length;
             document.getElementById('finish-fleet').innerText = finishCount;
             document.getElementById('standby-fleet').innerText = data.length - finishCount;
 
-            // Update Monitoring Table View
+            // Build Tampilan Tabel Terbalik (Terbaru Di Atas)
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
-            data.slice().reverse().forEach((item, index) => {
-                const row = `
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="p-3 font-semibold text-gray-500">${data.length - index}</td>
-                        <td class="p-3 font-bold text-gray-900">${item.NOPOL || '-'}</td>
-                        <td class="p-3 font-medium text-gray-700">${item['DRIVER NAME'] || '-'}</td>
-                        <td class="p-3 text-gray-600">${item.ORIGIN || '-'}</td>
-                        <td class="p-3 text-gray-600">${item.DESTINATION || '-'}</td>
-                        <td class="p-3">
-                            <span class="px-2.5 py-1 text-xs font-bold rounded-full ${String(item.STATUS).includes('FINISH') ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
-                                ${item.STATUS || 'OPEN'}
-                            </span>
-                        </td>
-                    </tr>`;
-                tbody.innerHTML += row;
-            });
+            
+            if(data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400 italic">Tidak ada log data logistik pada periode ini.</td></tr>`;
+            } else {
+                data.slice().reverse().forEach((item, index) => {
+                    const isFinish = String(item.STATUS).includes('FINISH');
+                    const badgeClass = isFinish ? 'bg-green-100 text-green-700 border-green-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200';
+                    const row = `
+                        <tr class="hover:bg-gray-50 transition border-b">
+                            <td class="p-3 font-semibold text-gray-400">${data.length - index}</td>
+                            <td class="p-3 font-bold text-gray-900">${item.NOPOL || '-'}</td>
+                            <td class="p-3 font-medium text-gray-700">${item['DRIVER NAME'] || '-'}</td>
+                            <td class="p-3 text-gray-600">${item.ORIGIN || '-'}</td>
+                            <td class="p-3 text-gray-600">${item.DESTINATION || '-'}</td>
+                            <td class="p-3">
+                                <span class="px-2.5 py-1 text-xs font-bold rounded-full border ${badgeClass}">
+                                    ${item.STATUS || 'OPEN'}
+                                </span>
+                            </td>
+                        </tr>`;
+                    tbody.innerHTML += row;
+                });
+            }
 
-            // Update Charts.js Visualizations
             renderCharts(data);
         }
 
+        // 5. Gambar Ulang Grafik Chart.js
         function renderCharts(data) {
             const originData = {}, driverData = {};
             data.forEach(item => {
@@ -283,20 +327,22 @@
                 type: 'doughnut',
                 data: {
                     labels: Object.keys(originData),
-                    datasets: [{ data: Object.values(originData), backgroundColor: ['#f97316', '#3b82f6', '#10b981', '#eab308'] }]
-                }
+                    datasets: [{ data: Object.values(originData), backgroundColor: ['#f97316', '#3b82f6', '#10b981', '#eab308', '#a855f7'] }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
             });
 
             charts.driver = new Chart(document.getElementById('driverChart'), {
                 type: 'bar',
                 data: {
                     labels: Object.keys(driverData),
-                    datasets: [{ label: 'Total Trip', data: Object.values(driverData), backgroundColor: '#3b82f6' }]
+                    datasets: [{ label: 'Jumlah Trip', data: Object.values(driverData), backgroundColor: '#f97316' }]
                 },
-                options: { scales: { y: { beginAtZero: true } } }
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
             });
         }
 
+        // 6. Submit Data Form Menuju Google Sheets via API Apps Script
         async function submitForm(event) {
             event.preventDefault();
             const btn = document.getElementById('btnSubmit');
@@ -308,6 +354,7 @@
             
             formData.forEach((value, key) => {
                 if((key === 'IN LOAD' || key === 'OUT LOAD') && value) {
+                    // Normalisasi pemisah tanggal waktu HTML agar ramah dibaca Spreadsheet
                     formObject[key] = value.replace('T', ' ') + ':00';
                 } else {
                     formObject[key] = value;
@@ -317,18 +364,21 @@
             try {
                 await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
+                    mode: 'no-cors', // Mencegah pemblokiran browser CORS lintas domain
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formObject)
                 });
 
-                alert("Data Logistik Berhasil Disimpan!");
+                alert("Data Logistik Berhasil Ditambahkan ke Google Sheets!");
                 document.getElementById('logisticForm').reset();
                 clearAutoFillFields();
+                toggleFieldsEditable(true);
                 document.getElementById('autoFillStatus').innerText = "Ketik nopol terdaftar...";
+                
+                // Beri jeda 1.5 detik agar Google Sheet memproses penulisan baris baru
                 setTimeout(fetchDashboardData, 1500);
             } catch (err) {
-                alert("Gagal mengirimkan data.");
+                alert("Gagal mengirimkan data ke Google Sheet.");
                 console.error(err);
             } finally {
                 btn.innerText = "💾 Simpan ke Google Sheet";
@@ -336,6 +386,7 @@
             }
         }
 
+        // Ambil data pertama kali saat halaman berhasil dimuat penuh
         window.onload = fetchDashboardData;
     </script>
 </body>
