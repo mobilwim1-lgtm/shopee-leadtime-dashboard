@@ -209,7 +209,7 @@
             border-collapse: collapse;
             text-align: left;
             background-color: white;
-            min-width: 1000px;
+            min-width: 1200px;
         }
 
         th {
@@ -308,14 +308,12 @@
 </head>
 <body>
 
-    <!-- Loading Overlay -->
     <div id="loadingOverlay" class="overlay">
         <div class="spinner"></div>
         <div id="loadingText">Memuat data logistik..</div>
     </div>
 
     <div class="container">
-        <!-- Header Section -->
         <header>
             <div>
                 <h1>Shopee Lead Time Dashboard</h1>
@@ -326,10 +324,8 @@
             </button>
         </header>
 
-        <!-- Main Dashboard View Grid -->
         <div class="dashboard-grid">
             
-            <!-- Left Panel: Input Form Logistik -->
             <div class="left-panel">
                 <div class="card">
                     <div class="card-title">📝 Input Data Operasional Baru</div>
@@ -372,18 +368,30 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="destinationInput">Status 1 (OPEN,CLOSE,CANCEL)</label>
-                            <input type="text" id="destinationInput" class="form-control" list="warehouseList" placeholder="Ketik/Pilih Gudang Tujuan" required>
+                            <label for="status1Input">Status 1</label>
+                            <select id="status1Input" class="form-control" required>
+                                <option value="">-- Pilih Status 1 --</option>
+                                <option value="OPEN">OPEN</option>
+                                <option value="CLOSE">CLOSE</option>
+                                <option value="CANCEL">CANCEL</option>
+                            </select>
                         </div>
 
                         <div class="form-group">
-                            <label for="destinationInput">Update Position (Posisi Aktual input manual)</label>
-                            <input type="text" id="destinationInput" class="form-control" list="warehouseList" placeholder="Ketik/Pilih Gudang Tujuan" required>
+                            <label for="updatePositionInput">Update Position (Posisi Aktual)</label>
+                            <input type="text" id="updatePositionInput" class="form-control" placeholder="Ketik Posisi Aktual Manual" required>
                         </div>
 
                         <div class="form-group">
-                            <label for="destinationInput">STATUS 2 (FINISH DO,ANTRI MUAT,ANTRI BONGKAR,ON DELIVERY,STANDBY)</label>
-                            <input type="text" id="destinationInput" class="form-control" list="warehouseList" placeholder="Ketik/Pilih Gudang Tujuan" required>
+                            <label for="status2Input">STATUS 2</label>
+                            <select id="status2Input" class="form-control" required>
+                                <option value="">-- Pilih Status 2 --</option>
+                                <option value="FINISH DO">FINISH DO</option>
+                                <option value="ANTRI MUAT">ANTRI MUAT</option>
+                                <option value="ANTRI BONGKAR">ANTRI BONGKAR</option>
+                                <option value="ON DELIVERY">ON DELIVERY</option>
+                                <option value="STANDBY">STANDBY</option>
+                            </select>
                         </div>
 
                         <div class="form-group">
@@ -396,7 +404,6 @@
                 </div>
             </div>
 
-            <!-- Right Panel: Live Monitoring Logs Table -->
             <div class="right-panel">
                 <div class="card">
                     <div class="card-title">📊 Live Monitoring & Update Timestamp</div>
@@ -421,14 +428,16 @@
                                     <th>IN LOAD</th>
                                     <th>OUT LOAD</th>
                                     <th>DESTINATION</th>
+                                    <th>STATUS 1</th>
+                                    <th>UPDATE POSITION</th>
+                                    <th>STATUS 2</th>
                                     <th>IN CUST.</th>
                                     <th>OUT CUST.</th>
                                     <th>KETERANGAN</th>
                                 </tr>
                             </thead>
                             <tbody id="logsTableBody">
-                                <!-- Data rows injected dynamically via JS -->
-                            </tbody>
+                                </tbody>
                         </table>
                     </div>
 
@@ -438,13 +447,9 @@
         </div>
     </div>
 
-    <!-- DataList global untuk autocomplete gudang -->
     <datalist id="warehouseList"></datalist>
 
     <script>
-        // =================================================================
-        // ⚠️ MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI BAWAH INI
-        // =================================================================
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhLowM9ffwffPA-ssTLpvTzzWRDYVFrek1ySj_jZljgoVQlxB4WX8lep_fbF38687Yug/exec";
 
         // Global state storage
@@ -493,7 +498,7 @@
                 });
         }
 
-        // 2. FUNGSI AUTO-POPULATE DATALIST GUDANG (FIXED AGAR TIDAK ERROR .TRIM MURNI)
+        // 2. FUNGSI AUTO-POPULATE DATALIST GUDANG
         function populateWarehouseDatalist(warehouses) {
             const datalist = document.getElementById('warehouseList');
             if (!datalist) return;
@@ -504,14 +509,12 @@
             warehouses.forEach(wh => {
                 let name = "";
                 if (typeof wh === 'object' && wh !== null) {
-                    // Cek nama property key fleksibel yang dipakai di database gudang Anda
                     let rawVal = wh['NAMA GUDANG'] || wh['GUDANG'] || wh['Nama Gudang'] || Object.values(wh)[0];
                     name = (rawVal !== undefined && rawVal !== null) ? String(rawVal) : "";
                 } else {
                     name = (wh !== undefined && wh !== null) ? String(wh) : "";
                 }
                 
-                // Eksekusi trim aman karena dipastikan bertipe data String teks murni
                 if (name && name.trim() !== "") {
                     const option = document.createElement('option');
                     option.value = name.trim();
@@ -534,22 +537,18 @@
                 return;
             }
 
-            // Bersihkan format spasi penulisan nopol untuk pencocokan yang akurat
             const cleanInput = inputVal.replace(/\s+/g, '');
             
-            // Cari data unit yang cocok di database master 'units'
             const foundUnit = database.units.find(u => {
                 let nopolDb = u['NOPOL'] || u['Nopol'] || '';
                 return String(nopolDb).replace(/\s+/g, '').toUpperCase() === cleanInput;
             });
 
             if (foundUnit) {
-                // Skenario A: Data Ditemukan otomatis
                 driverField.value = foundUnit['DRIVER NAME'] || foundUnit['DRIVER'] || foundUnit['Nama Driver'] || '';
                 hpField.value = foundUnit['NO HP'] || foundUnit['No HP'] || foundUnit['HP'] || '';
                 typeField.value = foundUnit['TYPE'] || foundUnit['TYPE TRUK'] || foundUnit['Jenis'] || '';
 
-                // Kunci/Freeze kolom agar tidak salah input
                 driverField.readOnly = true;
                 hpField.readOnly = true;
                 typeField.readOnly = true;
@@ -557,7 +556,6 @@
                 statusBadge.className = "status-badge success";
                 statusBadge.innerText = "✅ Data unit ditemukan otomatis dari master!";
             } else {
-                // Skenario B: Data Nopol Baru (Belum Terdaftar) -> Izinkan Isi MANUAL
                 driverField.readOnly = false;
                 hpField.readOnly = false;
                 typeField.readOnly = false;
@@ -572,26 +570,27 @@
             const tbody = document.getElementById('logsTableBody');
             tbody.innerHTML = '';
 
-            // Balik urutan agar data logs terbaru/paling bawah berada di baris atas tabel dashboard
             const sortedLogs = [...logs].reverse();
             
             document.getElementById('rowCountText').innerText = `Menampilkan ${sortedLogs.length} data operasional`;
 
             if (sortedLogs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:gray; padding:20px;">Belum ada record data logs di Tabel Operasional.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; color:gray; padding:20px;">Belum ada record data logs di Tabel Operasional.</td></tr>`;
                 return;
             }
 
             sortedLogs.forEach((row, idx) => {
                 const tr = document.createElement('tr');
                 
-                // Penyesuaian nama header properti JSON object sensitif dari Kode.gs
                 const nopol = row['NOPOL'] || '';
                 const driver = row['DRIVER NAME'] || row['DRIVER'] || '';
                 const type = row['TYPE'] || '';
                 const orderDate = row['CORDER DATE'] || row['ORDER DATE'] || '';
                 const origin = row['ORIGIN'] || '';
                 const destination = row['DESTINATION'] || '';
+                const status1 = row['STATUS 1'] || row['Status 1'] || '';
+                const updatePosition = row['UPDATE POSITION'] || row['Update Position'] || '';
+                const status2 = row['STATUS 2'] || row['Status 2'] || '';
                 const keterangan = row['KETERANGAN'] || '';
                 const rowIndex = row['ROW_INDEX'];
 
@@ -605,6 +604,9 @@
                     <td>${renderTimestampCell(rowIndex, 'IN LOAD', row['IN LOAD'])}</td>
                     <td>${renderTimestampCell(rowIndex, 'OUT LOAD', row['OUT LOAD'])}</td>
                     <td><b>${destination}</b></td>
+                    <td><span class="badge-status status-loading">${status1}</span></td>
+                    <td>${updatePosition}</td>
+                    <td><span class="badge-status status-finish">${status2}</span></td>
                     <td>${renderTimestampCell(rowIndex, 'IN CUST.', row['IN CUST.'] || row['IN CUST'])}</td>
                     <td>${renderTimestampCell(rowIndex, 'OUT CUST.', row['OUT CUST.'] || row['OUT CUST'])}</td>
                     <td><span style="font-size:12px; color:#555;">${keterangan}</span></td>
@@ -613,7 +615,6 @@
             });
         }
 
-        // Fungsi pembantu membuat tombol timestamp atau teks waktu yang sudah terkunci
         function renderTimestampCell(rowIndex, fieldName, currentVal) {
             if (currentVal && String(currentVal).trim() !== "") {
                 return `<div class="ts-btn filled">⏱️ ${currentVal}</div>`;
@@ -627,7 +628,6 @@
             event.preventDefault();
             showLoading(true, "Menyimpan data baru...");
 
-            // Mengumpulkan data sesuai struktur header di Google Sheet Anda
             const payload = {
                 "NOPOL": document.getElementById('nopolInput').value.trim().toUpperCase(),
                 "DRIVER NAME": document.getElementById('driverName').value.trim(),
@@ -636,6 +636,9 @@
                 "CORDER DATE": document.getElementById('orderDate').value,
                 "ORIGIN": document.getElementById('originInput').value.trim(),
                 "DESTINATION": document.getElementById('destinationInput').value.trim(),
+                "STATUS 1": document.getElementById('status1Input').value,
+                "UPDATE POSITION": document.getElementById('updatePositionInput').value.trim(),
+                "STATUS 2": document.getElementById('status2Input').value,
                 "KETERANGAN": document.getElementById('keteranganInput').value.trim()
             };
 
@@ -646,18 +649,20 @@
             .then(res => res.json())
             .then(result => {
                 if(result.status === 'success') {
-                    // Reset Form Isian (kecuali tanggal order dipertahankan)
+                    // Reset Semua Form Isian
                     document.getElementById('nopolInput').value = '';
                     document.getElementById('driverName').value = '';
                     document.getElementById('noHp').value = '';
                     document.getElementById('truckType').value = '';
                     document.getElementById('originInput').value = '';
                     document.getElementById('destinationInput').value = '';
+                    document.getElementById('status1Input').value = '';
+                    document.getElementById('updatePositionInput').value = '';
+                    document.getElementById('status2Input').value = '';
                     document.getElementById('keteranganInput').value = '';
                     document.getElementById('nopolStatus').style.display = 'none';
                     
-                    // Segarkan dashboard otomatis
-                    fetchDashboardData();
+                    fetchDashboardData(); // Segarkan tabel otomatis
                 } else {
                     alert("Gagal menambahkan data: " + result.message);
                     showLoading(false);
@@ -672,7 +677,6 @@
 
         // 6. AKSI LIVE BUTTON: Update Waktu Saat Unit Sampai/Berangkat (doPost update)
         function triggerTimestampUpdate(rowIndex, fieldName) {
-            // Dapatkan waktu lokal real-time client browser format: YYYY-MM-DD HH:MM:SS
             const now = new Date();
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -691,7 +695,6 @@
                 "action": "update",
                 "ROW_INDEX": rowIndex
             };
-            // Masukkan variabel kolom dinamis yang dituju
             payload[fieldName] = timestampFormatted;
 
             fetch(APPS_SCRIPT_URL, {
@@ -701,7 +704,7 @@
             .then(res => res.json())
             .then(result => {
                 if (result.status === 'success') {
-                    fetchDashboardData(); // Refresh ulang data visual terbaru
+                    fetchDashboardData();
                 } else {
                     alert("Gagal memperbarui waktu: " + result.message);
                     showLoading(false);
@@ -745,5 +748,3 @@
     </script>
 </body>
 </html>
-index.html
-Menampilkan index.html.
