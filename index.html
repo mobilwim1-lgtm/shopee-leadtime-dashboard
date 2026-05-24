@@ -407,8 +407,8 @@
                                 <option value="FINISH DO">FINISH DO</option>
                                 <option value="ANTRI MUAT">ANTRI MUAT</option>
                                 <option value="ANTRI BONGKAR">ANTRI BONGKAR</option>
-                                <option value="ON DELIVERY">ON DELIVERY</option>
                                 <option value="STANDBY">STANDBY</option>
+                                <option value="CANCEL">CANCEL</option>
                             </select>
                         </div>
 
@@ -448,14 +448,14 @@
                                     <th>DESTINATION</th>
                                     <th>STATUS 1</th>
                                     <th>UPDATE POSITION</th>
-                                    <th>STATUS 2</th>
                                     <th>OUT CUST.</th>
                                     <th>IN CUST.</th>
+                                    <th>STATUS 2</th>
                                     <th>KETERANGAN</th>
                                 </tr>
                             </thead>
                             <tbody id="logsTableBody">
-                                </tbody>
+                            </tbody>
                         </table>
                     </div>
 
@@ -633,6 +633,8 @@
                     <td><b>${destination}</b></td>
                     <td><span class="badge-status ${s1Class}">${status1}</span></td>
                     <td><small>${updatePosition}</small></td>
+                    <td>${renderTimestampCell(rowIndex, 'OUT CUST.', row['OUT CUST.'] || row['OUT CUST'])}</td>
+                    <td>${renderTimestampCell(rowIndex, 'IN CUST.', row['IN CUST.'] || row['IN CUST'])}</td>
                     <td>
                         <select class="table-select" onchange="saveStatus2Inline(${rowIndex}, this.value)">
                             <option value="" ${status2 === '' ? 'selected' : ''}>-- Pilih Status --</option>
@@ -643,8 +645,6 @@
                             <option value="CANCEL" ${status2 === 'CANCEL' ? 'selected' : ''}>CANCEL</option>
                         </select>
                     </td>
-                    <td>${renderTimestampCell(rowIndex, 'IN CUST.', row['IN CUST.'] || row['IN CUST'])}</td>
-                    <td>${renderTimestampCell(rowIndex, 'OUT CUST.', row['OUT CUST.'] || row['OUT CUST'])}</td>
                     <td><span style="font-size:12px; color:#555;">${keterangan}</span></td>
                 `;
                 tbody.appendChild(tr);
@@ -739,7 +739,7 @@
             });
         }
 
-        // FUNGSI BARU: Otomatis kirim data perubahan STATUS 2 ke Google Sheet
+        // FUNGSI UTAMA: Otomatis kirim data perubahan STATUS 2 ke Google Sheet saat dropdown berubah
         function saveStatus2Inline(rowIndex, selectedValue) {
             if (!selectedValue) return;
 
