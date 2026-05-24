@@ -449,9 +449,9 @@
                                     <th>DESTINATION</th>
                                     <th>STATUS 1</th>
                                     <th>UPDATE POSITION</th>
-                                    <th>STATUS 2</th>
                                     <th>OUT CUST.</th>
                                     <th>IN CUST.</th>
+                                    <th>STATUS 2</th>
                                     <th>KETERANGAN</th>
                                 </tr>
                             </thead>
@@ -622,7 +622,6 @@
                 if(status1 === "CLOSE") s1Class = "status-close";
                 if(status1 === "CANCEL") s1Class = "status-cancel";
 
-                // Diperbaiki: Mengurutkan penempatan OUT CUST dan IN CUST agar simetris dengan header `<th>`
                 tr.innerHTML = `
                     <td style="font-weight:bold; color:#777;">${sortedLogs.length - idx}</td>
                     <td style="font-weight:600; color:var(--primary-color);">${nopol}</td>
@@ -635,19 +634,13 @@
                     <td><b>${destination}</b></td>
                     <td><span class="badge-status ${s1Class}">${status1}</span></td>
                     <td><small>${updatePosition}</small></td>
-                    <td>
-                        <select class="table-select" onchange="saveStatus2Inline(${rowIndex}, '${nopol}', this.value)">
-                            <option value="" ${status2 === '' ? 'selected' : ''}>-- Pilih Status --</option>
-                            <option value="FINISH DO" ${status2 === 'FINISH DO' ? 'selected' : ''}>FINISH DO</option>
-                            <option value="ANTRI MUAT" ${status2 === 'ANTRI MUAT' ? 'selected' : ''}>ANTRI MUAT</option>
-                            <option value="ANTRI BONGKAR" ${status2 === 'ANTRI BONGKAR' ? 'selected' : ''}>ANTRI BONGKAR</option>
-                            <option value="ON DELIVERY" ${status2 === 'ON DELIVERY' ? 'selected' : ''}>ON DELIVERY</option>
-                            <option value="STANDBY" ${status2 === 'STANDBY' ? 'selected' : ''}>STANDBY</option>
-                            <option value="CANCEL" ${status2 === 'CANCEL' ? 'selected' : ''}>CANCEL</option>
-                        </select>
-                    </td>
                     <td>${renderTimestampCell(rowIndex, nopol, 'OUT CUST.', row['OUT CUST.'] || row['OUT CUST'])}</td>
                     <td>${renderTimestampCell(rowIndex, nopol, 'IN CUST.', row['IN CUST.'] || row['IN CUST'])}</td>
+                    <td>
+                        <input type="text" class="form-control" style="padding: 4px 8px; font-size: 12px; height: 28px; width: 145px;" 
+                               value="${status2}" placeholder="Ketik status..." 
+                               onchange="saveStatus2Inline(${rowIndex}, '${nopol}', this.value)">
+                    </td>
                     <td><span style="font-size:12px; color:#555;">${keterangan}</span></td>
                 `;
                 tbody.appendChild(tr);
