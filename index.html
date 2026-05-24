@@ -190,11 +190,41 @@
             align-items: center;
             margin-bottom: 15px;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 15px;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            flex-grow: 1;
         }
 
         .search-box {
-            max-width: 300px;
+            max-width: 280px;
+        }
+
+        .date-filter-box {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-clear-date {
+            background-color: #f1f2f6;
+            color: #333;
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-clear-date:hover {
+            background-color: #e4e5e9;
         }
 
         .table-container {
@@ -363,8 +393,16 @@
                     <div class="card-title">📊 Live Monitoring & Update Timestamp</div>
                     
                     <div class="table-toolbar">
-                        <input type="text" id="tableSearch" class="form-control search-box" placeholder="🔍 Cari Nopol / Driver / Gudang.." oninput="filterTable()">
-                        <div style="font-size: 13px; color: var(--text-muted);" id="rowCountText">
+                        <div class="filter-controls">
+                            <input type="text" id="tableSearch" class="form-control search-box" placeholder="🔍 Cari Nopol / Driver / Gudang.." oninput="filterTable()">
+                            
+                            <div class="date-filter-box">
+                                <label for="dateFilter" style="font-weight: 600; color: var(--text-muted); white-space: nowrap;">📅 Tanggal:</label>
+                                <input type="date" id="dateFilter" class="form-control" style="width: 150px; padding: 7px 10px;" onchange="filterTable()">
+                                <button type="button" class="btn-clear-date" onclick="clearDateFilter()">Semua</button>
+                            </div>
+                        </div>
+                        <div style="font-size: 13px; color: var(--text-muted); font-weight: 500;" id="rowCountText">
                             Menampilkan 0 data operasional
                         </div>
                     </div>
@@ -404,30 +442,25 @@
     <datalist id="warehouseList"></datalist>
 
     <script>
-        // TAUTAN INTEGRASI GOOGLE APPS SCRIPT WEB APP
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhLowM9ffwffPA-ssTLpvTzzWRDYVFrek1ySj_jZljgoVQlxB4WX8lep_fbF38687Yug/exec";
 
-        // Global state storage
         let database = {
             logs: [],
             units: [],
             warehouses: []
         };
 
-        // Otomatis set Tanggal Order ke Hari Ini saat halaman pertama kali dibuka
         document.getElementById('orderDate').valueAsDate = new Date();
 
-        // Lifecycle Hooks: Ambil data ketika dashboard dimuat
         window.addEventListener('DOMContentLoaded', () => {
             if (APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE" || APPS_SCRIPT_URL === "") {
                 showLoading(false);
-                alert("Perhatian: Silakan ganti nilai konstanta APPS_SCRIPT_URL dengan tautan Web App URL (/exec) hasil Deploy dari Google Apps Script Anda agar dapat terhubung secara dinamis.");
+                alert("Perhatian: Silakan ganti nilai konstanta APPS_SCRIPT_URL dengan tautan Web App URL hasil Deploy dari Google Apps Script.");
             } else {
                 fetchDashboardData();
             }
         });
 
-        // 1. FUNGSI UTAMA: Ambil / Tarik Data dari Server Google Sheets (doGet)
         function fetchDashboardData() {
             showLoading(true, "Memuat data logistik..");
             
@@ -441,19 +474,17 @@
                     database.units = data.units || [];
                     database.warehouses = data.warehouses || [];
 
-                    // Render ke komponen View HTML
                     populateWarehouseDatalist(database.warehouses);
-                    renderLogsTable(database.logs);
+                    filterTable(); // Memanggil filterTable agar kondisi filter text & tanggal saat ini langsung diterapkan
                     showLoading(false);
                 })
                 .catch(error => {
                     console.error("Gagal sinkronisasi data:", error);
                     showLoading(false);
-                    alert("Gagal memuat data dari Google Sheet. Periksa kembali deploy script, pastikan akses diset ke 'Anyone'.\n\nDetail: " + error.message);
+                    alert("Gagal memuat data dari Google Sheet. Detail: " + error.message);
                 });
         }
 
-        // 2. FUNGSI AUTO-POPULATE DATALIST GUDANG
         function populateWarehouseDatalist(warehouses) {
             const datalist = document.getElementById('warehouseList');
             if (!datalist) return;
@@ -463,12 +494,10 @@
 
             warehouses.forEach(wh => {
                 let name = "";
-                
                 if (Array.isArray(wh)) {
                     name = (wh[0] !== undefined && wh[0] !== null) ? String(wh[0]) : "";
                 } else if (typeof wh === 'object' && wh !== null) {
-                    let rawVal = wh['NAMA GUDANG'] || wh['GUDANG'] || wh['Nama Gudang'] || wh['Gudang'] || Object.values(wh)[0];
-                    name = (rawVal !== undefined && rawVal !== null) ? String(rawVal) : "";
+                    name = wh['NAMA GUDANG'] || wh['GUDANG'] || wh['Nama Gudang'] || wh['Gudang'] || Object.values(wh)[0];
                 } else {
                     name = (wh !== undefined && wh !== null) ? String(wh) : "";
                 }
@@ -482,7 +511,6 @@
             });
         }
 
-        // 3. LOGIKA INTERAKTIF FORM: Deteksi Live NOPOL dari Master Unit
         function handleNopolCheck() {
             const inputVal = document.getElementById('nopolInput').value.trim().toUpperCase();
             const statusBadge = document.getElementById('nopolStatus');
@@ -524,17 +552,15 @@
             }
         }
 
-        // 4. RENDERING VIEW: Menampilkan data Tabel Logistik Riil
-        function renderLogsTable(logs) {
+        function renderLogsTable(filteredLogs) {
             const tbody = document.getElementById('logsTableBody');
             tbody.innerHTML = '';
 
-            const sortedLogs = [...logs].reverse();
-            
+            const sortedLogs = [...filteredLogs].reverse();
             document.getElementById('rowCountText').innerText = `Menampilkan ${sortedLogs.length} data operasional`;
 
             if (sortedLogs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; color:gray; padding:20px;">Belum ada record data logs di Tabel Operasional.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; color:gray; padding:20px;">Tidak ada record data operasional yang cocok dengan filter.</td></tr>`;
                 return;
             }
 
@@ -558,7 +584,6 @@
                 const outCust = row['OUT CUST.'] || row['OUT CUST'] || '';
                 const inCust = row['IN CUST.'] || row['IN CUST'] || '';
 
-                // DATA TERINTEGRASI BARU: IN LOAD, OUT LOAD, STATUS 1, OUT CUST., dan IN CUST. Diubah menjadi Input Manual langsung
                 tr.innerHTML = `
                     <td style="font-weight:bold; color:#777;">${sortedLogs.length - idx}</td>
                     <td style="font-weight:600; color:var(--primary-color);">${nopol}</td>
@@ -607,7 +632,6 @@
             });
         }
 
-        // FUNGSI UTAMA REAL-TIME: Mengirim data perubahan input manual apa pun langsung ke Google Sheets secara dinamis
         function saveFieldInline(rowIndex, nopol, fieldName, fieldValue) {
             showLoading(true, `Memperbarui ${fieldName}...`);
 
@@ -625,7 +649,7 @@
             .then(res => res.json())
             .then(result => {
                 if (result.status === 'success') {
-                    fetchDashboardData(); // Otomatis refresh UI agar data sinkron dengan Google Sheet terbaru
+                    fetchDashboardData(); 
                 } else {
                     alert(`Gagal memperbarui ${fieldName}: ` + result.message);
                     showLoading(false);
@@ -638,7 +662,6 @@
             });
         }
 
-        // 5. AKSI FORM: Kirim data Input Baru ke Google Spreadsheet (doPost)
         function handleFormSubmit(event) {
             event.preventDefault();
             showLoading(true, "Menyimpan data baru...");
@@ -680,20 +703,52 @@
             });
         }
 
-        // 6. FUNGSI CLIENT-SIDE FILTERING: Kotak Pencarian Live
+        // FUNGSI PENCARIAN & FILTER MULTI-KONTEKS (Teks + Tanggal)
         function filterTable() {
             const query = document.getElementById('tableSearch').value.toLowerCase().trim();
+            const selectedDate = document.getElementById('dateFilter').value; // Format default: YYYY-MM-DD
+
             const filtered = database.logs.filter(row => {
+                // 1. Logika Filter Teks Utama
                 const nopol = String(row['NOPOL'] || '').toLowerCase();
                 const driver = String(row['DRIVER NAME'] || row['DRIVER'] || '').toLowerCase();
                 const origin = String(row['ORIGIN'] || '').toLowerCase();
                 const destination = String(row['DESTINATION'] || '').toLowerCase();
-                return nopol.includes(query) || driver.includes(query) || origin.includes(query) || destination.includes(query);
+                const textMatches = nopol.includes(query) || driver.includes(query) || origin.includes(query) || destination.includes(query);
+                
+                // 2. Logika Filter Tanggal Berdasarkan Kolom ORDER DATE
+                let dateMatches = true; 
+                if (selectedDate) {
+                    let rowDateStr = String(row['CORDER DATE'] || row['ORDER DATE'] || '').trim();
+                    
+                    // Standarisasi string jika data dari Google Sheets mengandung format waktu ISO (T00:00:00)
+                    if (rowDateStr.includes('T')) {
+                        rowDateStr = rowDateStr.split('T')[0];
+                    }
+
+                    // Pengecekan kecocokan tanggal (Format YYYY-MM-DD maupun DD/MM/YYYY)
+                    if (rowDateStr === selectedDate || rowDateStr.includes(selectedDate)) {
+                        dateMatches = true;
+                    } else {
+                        const parts = selectedDate.split('-'); // [YYYY, MM, DD]
+                        const dmyFormat = `${parts[2]}/${parts[1]}/${parts[0]}`; // Formats to DD/MM/YYYY
+                        const dmyFormatShort = `${parseInt(parts[2])}/${parseInt(parts[1])}/${parts[0]}`; // Formats to D/M/YYYY
+                        dateMatches = rowDateStr.includes(dmyFormat) || rowDateStr.includes(dmyFormatShort);
+                    }
+                }
+
+                return textMatches && dateMatches;
             });
+
             renderLogsTable(filtered);
         }
 
-        // Utility state handler loading screen spinner
+        // Fungsi Reset Filter Tanggal ke Mode Tampilan Keseluruhan
+        function clearDateFilter() {
+            document.getElementById('dateFilter').value = '';
+            filterTable();
+        }
+
         function showLoading(isVisible, message = "Memuat data logistik..") {
             const overlay = document.getElementById('loadingOverlay');
             const textElement = document.getElementById('loadingText');
