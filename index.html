@@ -277,7 +277,7 @@
             padding: 4px 8px;
             font-size: 12px;
             height: 28px;
-            width: 135px;
+            width: 145px;
             border-radius: 4px;
             border: 1px solid #cbd5e0;
             background-color: #fff;
@@ -319,7 +319,7 @@
         }
 
         @keyframes spin {
-            0 { transform: rotate(0deg); }
+            0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
     </style>
@@ -622,6 +622,8 @@
                 if(status1 === "CLOSE") s1Class = "status-close";
                 if(status1 === "CANCEL") s1Class = "status-cancel";
 
+                // Diperbaiki agar urutan sel td (Data Kolom) konsisten dengan header th tabel:
+                // OUT CUST. dahulu, baru kemudian IN CUST.
                 tr.innerHTML = `
                     <td style="font-weight:bold; color:#777;">${sortedLogs.length - idx}</td>
                     <td style="font-weight:600; color:var(--primary-color);">${nopol}</td>
@@ -741,7 +743,7 @@
             });
         }
 
-        // FUNGSI UTAMA: Otomatis kirim data perubahan STATUS 2 ke Google Sheet saat dropdown berubah
+        // FUNGSI UTAMA: Otomatis kirim data perubahan STATUS 2 ke Google Sheet saat dropdown dirubah (Logic 1 & 2)
         function saveStatus2Inline(rowIndex, selectedValue) {
             if (!selectedValue) return;
 
