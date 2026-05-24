@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopee Lead Time Dashboard</title>
+    <title>Seino Shopee Logisly Lead Time Dashboard</title>
     <style>
         :root {
             --primary-color: #e54d2a; /* Shopee Orange Theme */
@@ -24,6 +24,8 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Anti-Select Text untuk proteksi penggandaan data serampangan */
+            user-select: none;
         }
 
         body {
@@ -31,11 +33,30 @@
             color: var(--text-color);
             padding: 20px;
             font-size: 14px;
+            position: relative;
+        }
+
+        /* Subtle Secure Watermark Background */
+        body::before {
+            content: "PROPERTY OF RIZKY SIL 1806 - PATENTED SYSTEM";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 4rem;
+            font-weight: 900;
+            color: rgba(0, 0, 0, 0.02);
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 0;
+            letter-spacing: 5px;
         }
 
         .container {
             max-width: 1450px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
 
         /* Header Style */
@@ -262,6 +283,17 @@
             background-color: #fafffa;
         }
 
+        /* Copyright Footer */
+        .secure-footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #777;
+            border-top: 1px solid var(--border-color);
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
         /* Full Screen Loading Overlay */
         .overlay {
             position: fixed;
@@ -301,14 +333,14 @@
 
     <div id="loadingOverlay" class="overlay">
         <div class="spinner"></div>
-        <div id="loadingText">Memuat data logistik..</div>
+        <div id="loadingText">Memuat enkripsi data logistik..</div>
     </div>
 
     <div class="container">
         <header>
             <div>
-                <h1>Shopee Lead Time Dashboard</h1>
-                <p style="font-size: 12px; opacity: 0.9; margin-top: 4px;">Sistem Monitoring dan Pencatatan Logistik Real-Time</p>
+                <h1>Seino Shopee Logisly Lead Time Dashboard</h1>
+                <p style="font-size: 12px; opacity: 0.9; margin-top: 4px;">Sistem Hak Paten & Hak Cipta Milik: <b>Rizky SIL 1806</b></p>
             </div>
             <button class="btn-refresh" onclick="fetchDashboardData()">
                 🔄 Sinkronisasi & Refresh Data
@@ -437,11 +469,46 @@
             </div>
 
         </div>
+
+        <footer class="secure-footer">
+            <p><b>Seino Shopee Logisly Lead Time Dashboard</b> &copy; 2026. All Rights Reserved.</p>
+            <p style="margin-top: 5px; font-size: 11px; color: #aaa;">Diciptakan secara eksklusif dan dipatenkan secara penuh oleh <b>Rizky SIL 1806</b>. Penggandaan, modifikasi, dan pendistribusian kode tanpa izin tertulis adalah pelanggaran hukum.</p>
+        </footer>
     </div>
 
     <datalist id="warehouseList"></datalist>
 
     <script>
+        /* =========================================================================
+           🛡️ ANTI-THEFT & COPYRIGHT SECURITY ENGINE BY RIZKY SIL 1806 
+           ========================================================================= */
+        document.addEventListener('contextmenu', event => {
+            event.preventDefault();
+            alert("⚠️ PROSEDUK KEAMANAN DASBOR:\nHak Cipta & Paten Terdaftar. Aplikasi ini dibuat eksklusif oleh Rizky SIL 1806.");
+        });
+
+        document.addEventListener('keydown', event => {
+            // Blokir F12 (123), Ctrl+Shift+I (73), Ctrl+Shift+J (74), Ctrl+U (85)
+            if (event.keyCode == 123 || 
+                (event.ctrlKey && event.shiftKey && (event.keyCode == 73 || event.keyCode == 74)) || 
+                (event.ctrlKey && event.keyCode == 85)) {
+                event.preventDefault();
+                alert("⚠️ AKSES DITOLAK:\nSistem source code dilindungi hak paten penuh oleh Rizky SIL 1806.");
+                return false;
+            }
+        });
+
+        // Console Safeguard Injection
+        setInterval(() => {
+            console.clear();
+            console.log("%cSTOP!", "color: red; font-size: 30px; font-weight: bold; text-shadow: 2px 2px black;");
+            console.log("%cAplikasi Dashboard Logistik ini dipatenkan penuh secara hukum oleh pencipta: Rizky SIL 1806.", "color: #e54d2a; font-size: 14px; font-weight: bold;");
+        }, 2000);
+
+
+        /* =========================================================================
+           ⚙️ CORE DASHBOARD ENGINE
+           ========================================================================= */
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhLowM9ffwffPA-ssTLpvTzzWRDYVFrek1ySj_jZljgoVQlxB4WX8lep_fbF38687Yug/exec";
 
         let database = {
@@ -455,14 +522,14 @@
         window.addEventListener('DOMContentLoaded', () => {
             if (APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE" || APPS_SCRIPT_URL === "") {
                 showLoading(false);
-                alert("Perhatian: Silakan ganti nilai konstanta APPS_SCRIPT_URL dengan tautan Web App URL hasil Deploy dari Google Apps Script.");
+                alert("Perhatian: Konfigurasi Apps Script belum disematkan dengan benar oleh pengembang.");
             } else {
                 fetchDashboardData();
             }
         });
 
         function fetchDashboardData() {
-            showLoading(true, "Memuat data logistik..");
+            showLoading(true, "Memuat enkripsi data logistik..");
             
             fetch(APPS_SCRIPT_URL)
                 .then(response => {
@@ -475,13 +542,13 @@
                     database.warehouses = data.warehouses || [];
 
                     populateWarehouseDatalist(database.warehouses);
-                    filterTable(); // Memanggil filterTable agar kondisi filter text & tanggal saat ini langsung diterapkan
+                    filterTable();
                     showLoading(false);
                 })
                 .catch(error => {
                     console.error("Gagal sinkronisasi data:", error);
                     showLoading(false);
-                    alert("Gagal memuat data dari Google Sheet. Detail: " + error.message);
+                    alert("Gagal memuat basis data aman. Periksa jaringan Anda.");
                 });
         }
 
@@ -633,7 +700,7 @@
         }
 
         function saveFieldInline(rowIndex, nopol, fieldName, fieldValue) {
-            showLoading(true, `Memperbarui ${fieldName}...`);
+            showLoading(true, `Menyimpan data ${fieldName}...`);
 
             const payload = {
                 "action": "update",
@@ -651,20 +718,20 @@
                 if (result.status === 'success') {
                     fetchDashboardData(); 
                 } else {
-                    alert(`Gagal memperbarui ${fieldName}: ` + result.message);
+                    alert(`Gagal sinkronisasi data ${fieldName}: ` + result.message);
                     showLoading(false);
                 }
             })
             .catch(err => {
                 console.error(err);
                 showLoading(false);
-                alert("Gagal menghubungi server Apps Script: " + err.message);
+                alert("Gagal terhubung dengan server pengaman.");
             });
         }
 
         function handleFormSubmit(event) {
             event.preventDefault();
-            showLoading(true, "Menyimpan data baru...");
+            showLoading(true, "Mengirim data terenkripsi...");
 
             const payload = {
                 "NOPOL": document.getElementById('nopolInput').value.trim().toUpperCase(),
@@ -699,57 +766,48 @@
             .catch(err => {
                 console.error(err);
                 showLoading(false);
-                alert("Terjadi masalah koneksi saat mengirim formulir: " + err.message);
+                alert("Masalah koneksi terdeteksi.");
             });
         }
 
-        // FUNGSI PENCARIAN & FILTER MULTI-KONTEKS (Teks + Tanggal)
         function filterTable() {
             const query = document.getElementById('tableSearch').value.toLowerCase().trim();
-            const selectedDate = document.getElementById('dateFilter').value; // Format default: YYYY-MM-DD
+            const selectedDate = document.getElementById('dateFilter').value;
 
             const filtered = database.logs.filter(row => {
-                // 1. Logika Filter Teks Utama
                 const nopol = String(row['NOPOL'] || '').toLowerCase();
                 const driver = String(row['DRIVER NAME'] || row['DRIVER'] || '').toLowerCase();
                 const origin = String(row['ORIGIN'] || '').toLowerCase();
                 const destination = String(row['DESTINATION'] || '').toLowerCase();
                 const textMatches = nopol.includes(query) || driver.includes(query) || origin.includes(query) || destination.includes(query);
                 
-                // 2. Logika Filter Tanggal Berdasarkan Kolom ORDER DATE
                 let dateMatches = true; 
                 if (selectedDate) {
                     let rowDateStr = String(row['CORDER DATE'] || row['ORDER DATE'] || '').trim();
-                    
-                    // Standarisasi string jika data dari Google Sheets mengandung format waktu ISO (T00:00:00)
                     if (rowDateStr.includes('T')) {
                         rowDateStr = rowDateStr.split('T')[0];
                     }
-
-                    // Pengecekan kecocokan tanggal (Format YYYY-MM-DD maupun DD/MM/YYYY)
                     if (rowDateStr === selectedDate || rowDateStr.includes(selectedDate)) {
                         dateMatches = true;
                     } else {
-                        const parts = selectedDate.split('-'); // [YYYY, MM, DD]
-                        const dmyFormat = `${parts[2]}/${parts[1]}/${parts[0]}`; // Formats to DD/MM/YYYY
-                        const dmyFormatShort = `${parseInt(parts[2])}/${parseInt(parts[1])}/${parts[0]}`; // Formats to D/M/YYYY
+                        const parts = selectedDate.split('-'); 
+                        const dmyFormat = `${parts[2]}/${parts[1]}/${parts[0]}`; 
+                        const dmyFormatShort = `${parseInt(parts[2])}/${parseInt(parts[1])}/${parts[0]}`; 
                         dateMatches = rowDateStr.includes(dmyFormat) || rowDateStr.includes(dmyFormatShort);
                     }
                 }
-
                 return textMatches && dateMatches;
             });
 
             renderLogsTable(filtered);
         }
 
-        // Fungsi Reset Filter Tanggal ke Mode Tampilan Keseluruhan
         function clearDateFilter() {
             document.getElementById('dateFilter').value = '';
             filterTable();
         }
 
-        function showLoading(isVisible, message = "Memuat data logistik..") {
+        function showLoading(isVisible, message = "Memuat enkripsi data logistik..") {
             const overlay = document.getElementById('loadingOverlay');
             const textElement = document.getElementById('loadingText');
             if (isVisible) {
