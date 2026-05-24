@@ -1,3 +1,10 @@
+
+Percakapan dengan Gemini
+rubah posisi STATUS 2 di 📊 Live Monitoring & Update Timestamp menjadi posisinya setelah IN CUST. dan rubah dari pilihan menjadi input manual saja untuk STATUS 2
+
+Berikut adalah seluruh kode HTML yang telah diperbarui. Perubahan yang dilakukan meliputi pemindahan posisi kolom STATUS 2 setelah IN CUST. pada bagian header (<th>) maupun baris data (<td>), serta mengubah elemen dari pilihan dropdown (<select>) menjadi input teks manual (<input type="text">).
+
+HTML
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -842,3 +849,1016 @@
     </script>
 </body>
 </html>
+jadikan kodingan tersebut terintegrasi dan menjadi Web Dinamis dengan Googlesheet , Apps Script, dan Github : https://docs.google.com/spreadsheets/d/1hcLKPs2q73EQ_oLyykNaKWEPSW0sOzGILlwFbnfCCkc/edit?gid=0#gid=0
+
+Berikut adalah file dashboard HTML Anda yang sudah diperbarui, disesuaikan agar posisinya simetris, dan siap digunakan secara dinamis:
+
+Your HTML file is ready
+Ikon HTML
+ index_updated 
+HTML
+
+🔄 Ringkasan Perubahan Kode HTML:
+Posisi Kolom: Kolom STATUS 2 telah berhasil dipindahkan ke sebelah kanan kolom IN CUST. (sebelum kolom KETERANGAN) baik pada elemen judul tabel (<th>) maupun pada baris data (<td>).
+
+Ubah Menjadi Input Manual: Komponen input STATUS 2 pada tabel pemantauan langsung (Live Monitoring) telah diubah dari elemen pilihan (<select>) menjadi kolom input teks manual (<input type="text">), sehingga Anda bisa mengetik status secara bebas. Bagian form panel kiri juga disesuaikan untuk input manual agar seragam.
+
+🛠️ Panduan Integrasi Menjadi Web Dinamis (Google Sheets + Apps Script + GitHub)
+Ikuti langkah-langkah di bawah ini untuk menghubungkan file HTML di atas dengan Google Spreadsheet Anda secara real-time:
+
+LANGKAH 1: Persiapan Struktur Google Spreadsheet
+Buka Google Spreadsheet Anda (https://docs.google.com/spreadsheets/d/1hcLKPs2q73EQ_oLyykNaKWEPSW0sOzGILlwFbnfCCkc/), lalu pastikan Anda memiliki 3 Sheet/Tab dengan nama dan struktur nama kolom (Header di Baris 1) sebagai berikut:
+
+Tab 1: logs (Untuk menyimpan data operasional utama)
+
+Buat kolom di Baris 1: NOPOL, DRIVER NAME, NO HP, TYPE, CORDER DATE, ORIGIN, DESTINATION, STATUS 1, UPDATE POSITION, IN LOAD, OUT LOAD, OUT CUST., IN CUST., STATUS 2, KETERANGAN.
+
+Tab 2: units (Master data armada & driver untuk auto-populate)
+
+Buat kolom di Baris 1: NOPOL, DRIVER NAME, NO HP, TYPE
+
+Tab 3: warehouses (Daftar nama gudang untuk rekomendasi pilihan input)
+
+Buat kolom di Baris 1: NAMA GUDANG
+
+LANGKAH 2: Membuat Back-End dengan Google Apps Script
+Di dalam Google Spreadsheet Anda, klik menu Ekstensi > Apps Script.
+
+Hapus semua kode default di dalam editor Kode.gs, lalu tempelkan (paste) kode Apps Script berikut:
+
+JavaScript
+// Konfigurasi ID Spreadsheet Anda
+const SPREADSHEET_ID = "1hcLKPs2q73EQ_oLyykNaKWEPSW0sOzGILlwFbnfCCkc";
+
+// 1. FUNGSI GET: Untuk menarik data ke Dashboard HTML
+function doGet() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  
+  const sheetLogs = ss.getSheetByName("logs");
+  const dataLogs = sheetLogs ? getSheetDataWithHeader(sheetLogs, true) : [];
+  
+  const sheetUnits = ss.getSheetByName("units");
+  const dataUnits = sheetUnits ? getSheetDataWithHeader(sheetUnits, false) : [];
+  
+  const sheetWh = ss.getSheetByName("warehouses");
+  const dataWh = sheetWh ? getSheetDataWithHeader(sheetWh, false) : [];
+  
+  const result = {
+    logs: dataLogs,
+    units: dataUnits,
+    warehouses: dataWh
+  };
+  
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// 2. FUNGSI POST: Untuk menyimpan/mengubah data dari Dashboard HTML
+function doPost(e) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheetLogs = ss.getSheetByName("logs");
+    
+    if (!sheetLogs) throw new Error("Sheet dengan nama 'logs' tidak ditemukan!");
+    
+    const payload = JSON.parse(e.postData.contents);
+    
+    // Aksi EDIT/UPDATE Data (Timestamp Inline atau STATUS 2)
+    if (payload.action === "update") {
+      const rowIndex = parseInt(payload.ROW_INDEX);
+      const headers = sheetLogs.getRange(1, 1, 1, sheetLogs.getLastColumn()).getValues()[0];
+      
+      for (let key in payload) {
+        if (key !== "action" && key !== "ROW_INDEX" && key !== "NOPOL") {
+          let colIndex = headers.indexOf(key) + 1;
+          if (colIndex > 0) {
+            sheetLogs.getCell(rowIndex, colIndex).setValue(payload[key]);
+          }
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Data berhasil diperbarui!" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    } 
+    
+    // Aksi INPUT DATA BARU
+    else {
+      const headers = sheetLogs.getRange(1, 1, 1, sheetLogs.getLastColumn()).getValues()[0];
+      const newRow = new Array(headers.length).fill("");
+      
+      headers.forEach((header, index) => {
+        if (payload[header] !== undefined) {
+          newRow[index] = payload[header];
+        }
+      });
+      
+      sheetLogs.appendRow(newRow);
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Data baru berhasil disimpan!" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Fungsi Pembantu Formating Data JSON dari Sheet
+function getSheetDataWithHeader(sheet, includeRowIndex) {
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  if (lastRow <= 1) return [];
+  
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  const values = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+  
+  return values.map((row, idx) => {
+    let obj = {};
+    if (includeRowIndex) obj["ROW_INDEX"] = idx + 2; // Menyimpan info indeks baris asli di Sheet
+    
+    headers.forEach((header, colIdx) => {
+      if (header) {
+        let val = row[colIdx];
+        if (val instanceof Date) {
+          if (header.includes("DATE")) {
+            obj[header] = Utilities.formatDate(val, Session.getScriptTimeZone(), "yyyy-MM-dd");
+          } else {
+            obj[header] = Utilities.formatDate(val, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
+          }
+        } else {
+          obj[header] = val;
+        }
+      }
+    });
+    return obj;
+  });
+}
+Deploy Web App:
+
+Klik tombol Terapkan (Deploy) di kanan atas > Pilih Penerapan baru (New deployment).
+
+Pilih jenis konfigurasi: Aplikasi Web (Web app).
+
+Ubah akses ke:
+
+Jalankan sebagai: Saya (Email Anda)
+
+Yang memiliki akses: Siapa saja (Anyone — ini wajib agar HTML luar bisa mengirim data).
+
+Klik Terapkan. Berikan izin akses (Grant Access) jika diminta oleh Google Keamanan.
+
+Salin/Copy URL Aplikasi Web yang dihasilkan (URL berakhiran /exec).
+
+LANGKAH 3: Menghubungkan File HTML ke Web App
+Buka file index_updated.html yang telah Anda unduh di atas menggunakan aplikasi editor teks (seperti Notepad, VS Code, atau Sublime Text).
+
+Cari baris kode berikut pada awal tag <script> (sekitar baris ke-260):
+
+JavaScript
+const APPS_SCRIPT_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+Ganti "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE" dengan URL Web App hasil salinan Anda dari Langkah 2.
+
+Simpan kembali (Save) file HTML tersebut.
+
+LANGKAH 4: Hosting Menggunakan GitHub Pages
+Agar sistem dashboard ini dapat diakses oleh tim operasional dari mana saja secara online secara gratis, unggah ke GitHub:
+
+Buat akun di GitHub (jika belum punya) lalu buat sebuah Repository baru dengan nama bebas (misal: shopee-leadtime-dashboard). Set repository menjadi Public.
+
+Unggah file index_updated.html ke dalam repository tersebut, pastikan Anda mengubah namanya menjadi index.html agar otomatis dikenali oleh server sebagai halaman utama.
+
+Masuk ke menu Settings pada repository GitHub tersebut.
+
+Geser ke menu Pages di panel sebelah kiri.
+
+Pada bagian Build and deployment > Source, pilih Deploy from a branch.
+
+Pilih branch utama Anda (biasanya main atau master) dan folder / (root), lalu klik Save.
+
+Tunggu sekitar 1–2 menit, halaman Anda akan selesai diproses dan GitHub akan memunculkan tautan URL live (seperti https://username.github.io/shopee-leadtime-dashboard/) yang siap diakses oleh tim logistik Anda.
+
+
+
+
+Gemini adalah AI dan dapat melakukan kesalahan.
+
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopee Lead Time Dashboard</title>
+    <style>
+        :root {
+            --primary-color: #e54d2a; /* Shopee Orange Theme */
+            --primary-hover: #ca3e1e;
+            --bg-color: #f6f6f9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --text-muted: #666666;
+            --border-color: #e0e0e0;
+            --success-color: #2ecc71;
+            --warning-color: #f1c40f;
+            --danger-color: #e74c3c;
+            --info-color: #3498db;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1450px;
+            margin: 0 auto;
+        }
+
+        /* Header Style */
+        header {
+            background: linear-gradient(135deg, var(--primary-color), #ff7657);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(229, 77, 42, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .btn-refresh {
+            background-color: white;
+            color: var(--primary-color);
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .btn-refresh:hover {
+            background-color: #fff3f0;
+            transform: translateY(-2px);
+        }
+
+        /* Main Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 992px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Card Panels */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--bg-color);
+            color: #222;
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(229, 77, 42, 0.1);
+        }
+
+        .form-control:disabled, .form-control[readonly] {
+            background-color: #f1f2f6;
+            color: #7f8c8d;
+            cursor: not-allowed;
+        }
+
+        /* Status Badges untuk Form */
+        .status-badge {
+            margin-top: 6px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            display: none;
+        }
+        .status-badge.warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            display: block;
+        }
+        .status-badge.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* Table & Filtering View */
+        .table-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .search-box {
+            max-width: 300px;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            background-color: white;
+            min-width: 1350px;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: #333;
+            font-weight: 600;
+            padding: 12px 10px;
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        tr:hover {
+            background-color: #fafffa;
+        }
+
+        /* Timestamp Live Update Buttons */
+        .ts-btn {
+            background-color: #f1f2f6;
+            border: 1px solid #cbd5e0;
+            color: #4a5568;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .ts-btn:hover {
+            background-color: #e2e8f0;
+            border-color: #a0aec0;
+        }
+
+        .ts-btn.filled {
+            background-color: #e6fffa;
+            color: #006d5b;
+            border-color: #b2f5ea;
+        }
+
+        /* Status Row Labels */
+        .badge-status {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-open { background-color: #e3f2fd; color: #0d47a1; }
+        .status-close { background-color: #e8f5e9; color: #1b5e20; }
+        .status-cancel { background-color: #ffebee; color: #c62828; }
+        .status-generic { background-color: #f5f5f5; color: #424242; }
+
+        /* Full Screen Loading Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-color);
+            transition: opacity 0.3s ease;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loadingOverlay" class="overlay">
+        <div class="spinner"></div>
+        <div id="loadingText">Memuat data logistik..</div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div>
+                <h1>Shopee Lead Time Dashboard</h1>
+                <p style="font-size: 12px; opacity: 0.9; margin-top: 4px;">Sistem Monitoring dan Pencatatan Logistik Real-Time</p>
+            </div>
+            <button class="btn-refresh" onclick="fetchDashboardData()">
+                🔄 Sinkronisasi & Refresh Data
+            </button>
+        </header>
+
+        <div class="dashboard-grid">
+            
+            <div class="left-panel">
+                <div class="card">
+                    <div class="card-title">📝 Input Data Operasional Baru</div>
+                    <form id="logForm" onsubmit="handleFormSubmit(event)">
+                        
+                        <div class="form-group">
+                            <label for="nopolInput">Nomor Polisi (NOPOL)</label>
+                            <input type="text" id="nopolInput" class="form-control" placeholder="Contoh: B 1234 ABC" required oninput="handleNopolCheck()">
+                            <div id="nopolStatus" class="status-badge"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="driverName">Nama Driver</label>
+                            <input type="text" id="driverName" class="form-control" required placeholder="Terisi otomatis / manual">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="noHp">No HP Driver</label>
+                            <input type="text" id="noHp" class="form-control" required placeholder="Terisi otomatis / manual">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="truckType">Type Truk</label>
+                            <input type="text" id="truckType" class="form-control" required placeholder="Terisi otomatis / manual">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="orderDate">Order Date</label>
+                            <input type="date" id="orderDate" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="originInput">Origin (Gudang Asal)</label>
+                            <input type="text" id="originInput" class="form-control" list="warehouseList" placeholder="Ketik/Pilih Gudang Asal" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="destinationInput">Destination (Gudang Tujuan)</label>
+                            <input type="text" id="destinationInput" class="form-control" list="warehouseList" placeholder="Ketik/Pilih Gudang Tujuan" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="status1Input">Status 1</label>
+                            <select id="status1Input" class="form-control" required>
+                                <option value="">-- Pilih Status 1 --</option>
+                                <option value="OPEN">OPEN</option>
+                                <option value="CLOSE">CLOSE</option>
+                                <option value="CANCEL">CANCEL</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="updatePositionInput">Update Position (Posisi Aktual)</label>
+                            <input type="text" id="updatePositionInput" class="form-control" placeholder="Ketik Posisi Aktual Manual" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="status2Input">STATUS 2</label>
+                            <input type="text" id="status2Input" class="form-control" placeholder="Ketik Status 2 Manual" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="keteranganInput">Keterangan</label>
+                            <textarea id="keteranganInput" class="form-control" rows="2" placeholder="Catatan opsional..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-submit">💾 Simpan ke Google Sheet</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="card">
+                    <div class="card-title">📊 Live Monitoring & Update Timestamp</div>
+                    
+                    <div class="table-toolbar">
+                        <input type="text" id="tableSearch" class="form-control search-box" placeholder="🔍 Cari Nopol / Driver / Gudang.." oninput="filterTable()">
+                        <div style="font-size: 13px; color: var(--text-muted);" id="rowCountText">
+                            Menampilkan 0 data operasional
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>NO</th>
+                                    <th>NOPOL</th>
+                                    <th>DRIVER NAME</th>
+                                    <th>TYPE</th>
+                                    <th>ORDER DATE</th>
+                                    <th>ORIGIN</th>
+                                    <th>IN LOAD</th>
+                                    <th>OUT LOAD</th>
+                                    <th>DESTINATION</th>
+                                    <th>STATUS 1</th>
+                                    <th>UPDATE POSITION</th>
+                                    <th>OUT CUST.</th>
+                                    <th>IN CUST.</th>
+                                    <th>STATUS 2</th>
+                                    <th>KETERANGAN</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logsTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <datalist id="warehouseList"></datalist>
+
+    <script>
+        // TAUTAN INTEGRASI GOOGLE APPS SCRIPT WEB APP
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhLowM9ffwffPA-ssTLpvTzzWRDYVFrek1ySj_jZljgoVQlxB4WX8lep_fbF38687Yug/exec";
+
+        // Global state storage
+        let database = {
+            logs: [],
+            units: [],
+            warehouses: []
+        };
+
+        // Otomatis set Tanggal Order ke Hari Ini saat halaman pertama kali dibuka
+        document.getElementById('orderDate').valueAsDate = new Date();
+
+        // Lifecycle Hooks: Ambil data ketika dashboard dimuat
+        window.addEventListener('DOMContentLoaded', () => {
+            if (APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE" || APPS_SCRIPT_URL === "") {
+                showLoading(false);
+                alert("Perhatian: Silakan ganti nilai konstanta APPS_SCRIPT_URL dengan tautan Web App URL (/exec) hasil Deploy dari Google Apps Script Anda agar dapat terhubung secara dinamis.");
+            } else {
+                fetchDashboardData();
+            }
+        });
+
+        // 1. FUNGSI UTAMA: Ambil / Tarik Data dari Server Google Sheets (doGet)
+        function fetchDashboardData() {
+            showLoading(true, "Memuat data logistik..");
+            
+            fetch(APPS_SCRIPT_URL)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    database.logs = data.logs || [];
+                    database.units = data.units || [];
+                    database.warehouses = data.warehouses || [];
+
+                    // Render ke komponen View HTML
+                    populateWarehouseDatalist(database.warehouses);
+                    renderLogsTable(database.logs);
+                    showLoading(false);
+                })
+                .catch(error => {
+                    console.error("Gagal sinkronisasi data:", error);
+                    showLoading(false);
+                    alert("Gagal memuat data dari Google Sheet. Periksa kembali deploy script, pastikan akses diset ke 'Anyone'.\n\nDetail: " + error.message);
+                });
+        }
+
+        // 2. FUNGSI AUTO-POPULATE DATALIST GUDANG
+        function populateWarehouseDatalist(warehouses) {
+            const datalist = document.getElementById('warehouseList');
+            if (!datalist) return;
+            datalist.innerHTML = '';
+            
+            if (!Array.isArray(warehouses)) return;
+
+            warehouses.forEach(wh => {
+                let name = "";
+                
+                if (Array.isArray(wh)) {
+                    name = (wh[0] !== undefined && wh[0] !== null) ? String(wh[0]) : "";
+                } else if (typeof wh === 'object' && wh !== null) {
+                    let rawVal = wh['NAMA GUDANG'] || wh['GUDANG'] || wh['Nama Gudang'] || wh['Gudang'] || Object.values(wh)[0];
+                    name = (rawVal !== undefined && rawVal !== null) ? String(rawVal) : "";
+                } else {
+                    name = (wh !== undefined && wh !== null) ? String(wh) : "";
+                }
+                
+                const lowerName = name.toLowerCase().trim();
+                if (name && name.trim() !== "" && lowerName !== "nama gudang" && lowerName !== "gudang" && lowerName !== "no") {
+                    const option = document.createElement('option');
+                    option.value = name.trim();
+                    datalist.appendChild(option);
+                }
+            });
+        }
+
+        // 3. LOGIKA INTERAKTIF FORM: Deteksi Live NOPOL dari Master Unit
+        function handleNopolCheck() {
+            const inputVal = document.getElementById('nopolInput').value.trim().toUpperCase();
+            const statusBadge = document.getElementById('nopolStatus');
+            
+            const driverField = document.getElementById('driverName');
+            const hpField = document.getElementById('noHp');
+            const typeField = document.getElementById('truckType');
+
+            if (!inputVal) {
+                statusBadge.style.display = 'none';
+                return;
+            }
+
+            const cleanInput = inputVal.replace(/\s+/g, '');
+            
+            const foundUnit = database.units.find(u => {
+                let nopolDb = u['NOPOL'] || u['Nopol'] || '';
+                return String(nopolDb).replace(/\s+/g, '').toUpperCase() === cleanInput;
+            });
+
+            if (foundUnit) {
+                driverField.value = foundUnit['DRIVER NAME'] || foundUnit['DRIVER'] || foundUnit['Nama Driver'] || '';
+                hpField.value = foundUnit['NO HP'] || foundUnit['No HP'] || foundUnit['HP'] || '';
+                typeField.value = foundUnit['TYPE'] || foundUnit['TYPE TRUK'] || foundUnit['Jenis'] || '';
+
+                driverField.readOnly = true;
+                hpField.readOnly = true;
+                typeField.readOnly = true;
+
+                statusBadge.className = "status-badge success";
+                statusBadge.innerText = "✅ Data unit ditemukan otomatis dari master!";
+            } else {
+                driverField.readOnly = false;
+                hpField.readOnly = false;
+                typeField.readOnly = false;
+
+                statusBadge.className = "status-badge warning";
+                statusBadge.innerText = "⚠️ Nopol belum terdaftar di 'Data Unit Total'. Silakan isi MANUAL:";
+            }
+        }
+
+        // 4. RENDERING VIEW: Menampilkan data Tabel Logistik Riil
+        function renderLogsTable(logs) {
+            const tbody = document.getElementById('logsTableBody');
+            tbody.innerHTML = '';
+
+            const sortedLogs = [...logs].reverse();
+            
+            document.getElementById('rowCountText').innerText = `Menampilkan ${sortedLogs.length} data operasional`;
+
+            if (sortedLogs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; color:gray; padding:20px;">Belum ada record data logs di Tabel Operasional.</td></tr>`;
+                return;
+            }
+
+            sortedLogs.forEach((row, idx) => {
+                const tr = document.createElement('tr');
+                
+                const nopol = row['NOPOL'] || '';
+                const driver = row['DRIVER NAME'] || row['DRIVER'] || '';
+                const type = row['TYPE'] || '';
+                const orderDate = row['CORDER DATE'] || row['ORDER DATE'] || '';
+                const origin = row['ORIGIN'] || '';
+                const destination = row['DESTINATION'] || '';
+                const status1 = row['STATUS 1'] || row['Status 1'] || '';
+                const updatePosition = row['UPDATE POSITION'] || row['Update Position'] || '';
+                const status2 = (row['STATUS 2'] || row['Status 2'] || '').toUpperCase().trim();
+                const keterangan = row['KETERANGAN'] || '';
+                const rowIndex = row['ROW_INDEX'];
+
+                let s1Class = "status-generic";
+                if(status1 === "OPEN") s1Class = "status-open";
+                if(status1 === "CLOSE") s1Class = "status-close";
+                if(status1 === "CANCEL") s1Class = "status-cancel";
+
+                // PERUBAHAN UTAMA: Posisi STATUS 2 dipindahkan setelah IN CUST., menggunakan input teks manual
+                tr.innerHTML = `
+                    <td style="font-weight:bold; color:#777;">${sortedLogs.length - idx}</td>
+                    <td style="font-weight:600; color:var(--primary-color);">${nopol}</td>
+                    <td>${driver}</td>
+                    <td><small>${type}</small></td>
+                    <td>${orderDate}</td>
+                    <td><b>${origin}</b></td>
+                    <td>${renderTimestampCell(rowIndex, nopol, 'IN LOAD', row['IN LOAD'])}</td>
+                    <td>${renderTimestampCell(rowIndex, nopol, 'OUT LOAD', row['OUT LOAD'])}</td>
+                    <td><b>${destination}</b></td>
+                    <td><span class="badge-status ${s1Class}">${status1}</span></td>
+                    <td><small>${updatePosition}</small></td>
+                    <td>${renderTimestampCell(rowIndex, nopol, 'OUT CUST.', row['OUT CUST.'] || row['OUT CUST'])}</td>
+                    <td>${renderTimestampCell(rowIndex, nopol, 'IN CUST.', row['IN CUST.'] || row['IN CUST'])}</td>
+                    <td>
+                        <input type="text" class="form-control" style="padding: 4px 8px; font-size: 12px; height: 28px; width: 145px;" 
+                               value="${status2}" placeholder="Ketik status..." 
+                               onchange="saveStatus2Inline(${rowIndex}, '${nopol}', this.value)">
+                    </td>
+                    <td><span style="font-size:12px; color:#555;">${keterangan}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Render struktur tombol timestamp / teks jam kustom
+        function renderTimestampCell(rowIndex, nopol, fieldName, currentVal) {
+            if (currentVal && String(currentVal).trim() !== "") {
+                return `<div class="ts-btn filled" style="cursor:pointer;" title="Klik untuk mengubah/edit waktu" onclick="enableInlinePicker(this, ${rowIndex}, '${nopol}', '${fieldName}', '${currentVal}')">⏱️ ${currentVal}</div>`;
+            } else {
+                return `<button type="button" class="ts-btn" onclick="enableInlinePicker(this, ${rowIndex}, '${nopol}', '${fieldName}', '')">➕ Set Time</button>`;
+            }
+        }
+
+        // Mengubah tombol menjadi DateTime Picker lokal di baris tabel
+        function enableInlinePicker(element, rowIndex, nopol, fieldName, currentVal) {
+            if (element.tagName === 'DIV' && element.querySelector('input')) return;
+            
+            let defaultVal = "";
+            if (currentVal && currentVal.trim() !== "") {
+                let parts = currentVal.split(' ');
+                if (parts.length >= 2) {
+                    defaultVal = parts[0] + 'T' + parts[1].substring(0, 5);
+                } else {
+                    defaultVal = currentVal.replace(' ', 'T').substring(0, 16);
+                }
+            } else {
+                const now = new Date();
+                const tzoffset = now.getTimezoneOffset() * 60000;
+                defaultVal = (new Date(now - tzoffset)).toISOString().slice(0, 16);
+            }
+
+            const safeId = `picker_${rowIndex}_${fieldName.replace(/[^a-zA-Z0-9]/g, '')}`;
+            
+            element.parentElement.innerHTML = `
+                <div style="display: flex; gap: 4px; align-items: center;">
+                    <input type="datetime-local" id="${safeId}" class="form-control" 
+                           style="padding: 2px 4px; font-size: 11px; width: 145px; height: 26px; border-color: var(--primary-color);" 
+                           value="${defaultVal}">
+                    <button type="button" class="ts-btn filled" 
+                            style="background-color: #2ecc71; color: white; border: none; padding: 2px 6px; border-radius: 4px; height: 26px; display: flex; align-items: center;" 
+                            title="Simpan pembaruan waktu"
+                            onclick="saveInlineTimestamp(${rowIndex}, '${nopol}', '${fieldName}', '${safeId}')">
+                        💾
+                    </button>
+                    <button type="button" class="ts-btn" 
+                            style="background-color: #e74c3c; color: white; border: none; padding: 2px 6px; border-radius: 4px; height: 26px; display: flex; align-items: center;" 
+                            title="Batalkan"
+                            onclick="fetchDashboardData()">
+                        ❌
+                    </button>
+                </div>
+            `;
+        }
+
+        // Fungsi kirim data pembaruan waktu kustom ke Google Apps Script
+        function saveInlineTimestamp(rowIndex, nopol, fieldName, pickerId) {
+            const picker = document.getElementById(pickerId);
+            if (!picker || !picker.value) {
+                alert("Silakan tentukan pilihan tanggal dan waktu!");
+                return;
+            }
+
+            const formattedTimestamp = picker.value.replace('T', ' ') + ":00";
+
+            showLoading(true, `Menyimpan waktu kustom \${fieldName}...`);
+
+            const payload = {
+                "action": "update",
+                "ROW_INDEX": rowIndex,
+                "NOPOL": nopol
+            };
+            payload[fieldName] = formattedTimestamp;
+
+            fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    fetchDashboardData();
+                } else {
+                    alert("Gagal memperbarui waktu: " + result.message);
+                    showLoading(false);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showLoading(false);
+                alert("Gagal menghubungi server Apps Script: " + err.message);
+            });
+        }
+
+        // FUNGSI REAL-TIME: Otomatis kirim data perubahan STATUS 2 ke Google Sheet (Logic 1 & Logic 2)
+        function saveStatus2Inline(rowIndex, nopol, selectedValue) {
+            showLoading(true, `Memperbarui STATUS 2 ke \${selectedValue}...`);
+
+            const payload = {
+                "action": "update",
+                "ROW_INDEX": rowIndex,
+                "NOPOL": nopol,
+                "STATUS 2": selectedValue
+            };
+
+            fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    fetchDashboardData();
+                } else {
+                    alert("Gagal memperbarui STATUS 2: " + result.message);
+                    showLoading(false);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showLoading(false);
+                alert("Gagal menghubungi server Apps Script: " + err.message);
+            });
+        }
+
+        // 5. AKSI FORM: Kirim data Input Baru ke Google Spreadsheet (doPost)
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            showLoading(true, "Menyimpan data baru...");
+
+            const payload = {
+                "NOPOL": document.getElementById('nopolInput').value.trim().toUpperCase(),
+                "DRIVER NAME": document.getElementById('driverName').value.trim(),
+                "NO HP": document.getElementById('noHp').value.trim(),
+                "TYPE": document.getElementById('truckType').value.trim(),
+                "CORDER DATE": document.getElementById('orderDate').value,
+                "ORIGIN": document.getElementById('originInput').value.trim(),
+                "DESTINATION": document.getElementById('destinationInput').value.trim(),
+                "STATUS 1": document.getElementById('status1Input').value,
+                "UPDATE POSITION": document.getElementById('updatePositionInput').value.trim(),
+                "STATUS 2": document.getElementById('status2Input').value.trim(),
+                "KETERANGAN": document.getElementById('keteranganInput').value.trim()
+            };
+
+            fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(result => {
+                if(result.status === 'success') {
+                    document.getElementById('logForm').reset();
+                    document.getElementById('orderDate').valueAsDate = new Date();
+                    document.getElementById('nopolStatus').style.display = 'none';
+                    fetchDashboardData();
+                } else {
+                    alert("Gagal menambahkan data: " + result.message);
+                    showLoading(false);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showLoading(false);
+                alert("Terjadi masalah koneksi saat mengirim formulir: " + err.message);
+            });
+        }
+
+        // 6. FUNGSI CLIENT-SIDE FILTERING: Kotak Pencarian Live
+        function filterTable() {
+            const query = document.getElementById('tableSearch').value.toLowerCase().trim();
+            const filtered = database.logs.filter(row => {
+                const nopol = String(row['NOPOL'] || '').toLowerCase();
+                const driver = String(row['DRIVER NAME'] || row['DRIVER'] || '').toLowerCase();
+                const origin = String(row['ORIGIN'] || '').toLowerCase();
+                const destination = String(row['DESTINATION'] || '').toLowerCase();
+                return nopol.includes(query) || driver.includes(query) || origin.includes(query) || destination.includes(query);
+            });
+            renderLogsTable(filtered);
+        }
+
+        // Utility state handler loading screen spinner
+        function showLoading(isVisible, message = "Memuat data logistik..") {
+            const overlay = document.getElementById('loadingOverlay');
+            const textElement = document.getElementById('loadingText');
+            if (isVisible) {
+                textElement.innerText = message;
+                overlay.style.opacity = '1';
+                overlay.style.pointerEvents = 'auto';
+                overlay.style.display = 'flex';
+            } else {
+                overlay.style.opacity = '0';
+                overlay.style.pointerEvents = 'none';
+                setTimeout(() => { if(overlay.style.opacity === '0') overlay.style.display = 'none'; }, 300);
+            }
+        }
+    </script>
+</body>
+</html>
+index_updated.html
+Menampilkan index_updated.html.
