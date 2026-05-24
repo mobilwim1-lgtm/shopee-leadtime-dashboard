@@ -34,7 +34,7 @@
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1450px;
             margin: 0 auto;
         }
 
@@ -81,7 +81,7 @@
         /* Main Grid Layout */
         .dashboard-grid {
             display: grid;
-            grid-template-columns: 350px 1fr;
+            grid-template-columns: 360px 1fr;
             gap: 20px;
         }
 
@@ -209,7 +209,7 @@
             border-collapse: collapse;
             text-align: left;
             background-color: white;
-            min-width: 1200px;
+            min-width: 1350px;
         }
 
         th {
@@ -268,8 +268,10 @@
             font-weight: bold;
             text-transform: uppercase;
         }
-        .status-loading { background-color: #e3f2fd; color: #0d47a1; }
-        .status-finish { background-color: #e8f5e9; color: #1b5e20; }
+        .status-open { background-color: #e3f2fd; color: #0d47a1; }
+        .status-close { background-color: #e8f5e9; color: #1b5e20; }
+        .status-cancel { background-color: #ffebee; color: #c62828; }
+        .status-generic { background-color: #f5f5f5; color: #424242; }
 
         /* Full Screen Loading Overlay */
         .overlay {
@@ -498,7 +500,7 @@
                 });
         }
 
-        // 2. FUNGSI AUTO-POPULATE DATALIST GUDANG
+        // 2. FUNGSI AUTO-POPULATE DATALIST GUDANG (ROBUST UNTUK SEGALA FORMAT DATA)
         function populateWarehouseDatalist(warehouses) {
             const datalist = document.getElementById('warehouseList');
             if (!datalist) return;
@@ -508,14 +510,22 @@
 
             warehouses.forEach(wh => {
                 let name = "";
-                if (typeof wh === 'object' && wh !== null) {
-                    let rawVal = wh['NAMA GUDANG'] || wh['GUDANG'] || wh['Nama Gudang'] || Object.values(wh)[0];
+                
+                if (Array.isArray(wh)) {
+                    // Jika data berformat array mentah [[Gudang A], [Gudang B]] akibat .getValues()
+                    name = (wh[0] !== undefined && wh[0] !== null) ? String(wh[0]) : "";
+                } else if (typeof wh === 'object' && wh !== null) {
+                    // Jika data berformat object JSON
+                    let rawVal = wh['NAMA GUDANG'] || wh['GUDANG'] || wh['Nama Gudang'] || wh['Gudang'] || Object.values(wh)[0];
                     name = (rawVal !== undefined && rawVal !== null) ? String(rawVal) : "";
                 } else {
+                    // Jika data berformat string biasa
                     name = (wh !== undefined && wh !== null) ? String(wh) : "";
                 }
                 
-                if (name && name.trim() !== "") {
+                // Hilangkan baris header spreadsheet agar tidak masuk opsi pilihan
+                const lowerName = name.toLowerCase().trim();
+                if (name && name.trim() !== "" && lowerName !== "nama gudang" && lowerName !== "gudang" && lowerName !== "no") {
                     const option = document.createElement('option');
                     option.value = name.trim();
                     datalist.appendChild(option);
@@ -594,6 +604,12 @@
                 const keterangan = row['KETERANGAN'] || '';
                 const rowIndex = row['ROW_INDEX'];
 
+                // Berikan warna badge dinamis sesuai dengan isi text Status 1
+                let s1Class = "status-generic";
+                if(status1 === "OPEN") s1Class = "status-open";
+                if(status1 === "CLOSE") s1Class = "status-close";
+                if(status1 === "CANCEL") s1Class = "status-cancel";
+
                 tr.innerHTML = `
                     <td style="font-weight:bold; color:#777;">${sortedLogs.length - idx}</td>
                     <td style="font-weight:600; color:var(--primary-color);">${nopol}</td>
@@ -604,9 +620,9 @@
                     <td>${renderTimestampCell(rowIndex, 'IN LOAD', row['IN LOAD'])}</td>
                     <td>${renderTimestampCell(rowIndex, 'OUT LOAD', row['OUT LOAD'])}</td>
                     <td><b>${destination}</b></td>
-                    <td><span class="badge-status status-loading">${status1}</span></td>
-                    <td>${updatePosition}</td>
-                    <td><span class="badge-status status-finish">${status2}</span></td>
+                    <td><span class="badge-status ${s1Class}">${status1}</span></td>
+                    <td><small>${updatePosition}</small></td>
+                    <td><span class="badge-status status-open">${status2}</span></td>
                     <td>${renderTimestampCell(rowIndex, 'IN CUST.', row['IN CUST.'] || row['IN CUST'])}</td>
                     <td>${renderTimestampCell(rowIndex, 'OUT CUST.', row['OUT CUST.'] || row['OUT CUST'])}</td>
                     <td><span style="font-size:12px; color:#555;">${keterangan}</span></td>
@@ -649,7 +665,7 @@
             .then(res => res.json())
             .then(result => {
                 if(result.status === 'success') {
-                    // Reset Semua Form Isian
+                    // Reset Semua Form Isian secara bersih
                     document.getElementById('nopolInput').value = '';
                     document.getElementById('driverName').value = '';
                     document.getElementById('noHp').value = '';
@@ -662,7 +678,7 @@
                     document.getElementById('keteranganInput').value = '';
                     document.getElementById('nopolStatus').style.display = 'none';
                     
-                    fetchDashboardData(); // Segarkan tabel otomatis
+                    fetchDashboardData(); // Refresh UI otomatis agar baris baru langsung tampil di urutan atas
                 } else {
                     alert("Gagal menambahkan data: " + result.message);
                     showLoading(false);
