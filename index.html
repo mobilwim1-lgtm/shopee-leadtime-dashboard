@@ -449,9 +449,9 @@
                                     <th>DESTINATION</th>
                                     <th>STATUS 1</th>
                                     <th>UPDATE POSITION</th>
+                                    <th>STATUS 2</th>
                                     <th>OUT CUST.</th>
                                     <th>IN CUST.</th>
-                                    <th>STATUS 2</th>
                                     <th>KETERANGAN</th>
                                 </tr>
                             </thead>
@@ -622,8 +622,7 @@
                 if(status1 === "CLOSE") s1Class = "status-close";
                 if(status1 === "CANCEL") s1Class = "status-cancel";
 
-                // Diperbaiki agar urutan sel td (Data Kolom) konsisten dengan header th tabel:
-                // OUT CUST. dahulu, baru kemudian IN CUST.
+                // Diperbaiki: Menyelaraskan urutan OUT CUST. dan IN CUST. agar pas di bawah letak header <th>
                 tr.innerHTML = `
                     <td style="font-weight:bold; color:#777;">${sortedLogs.length - idx}</td>
                     <td style="font-weight:600; color:var(--primary-color);">${nopol}</td>
@@ -631,15 +630,13 @@
                     <td><small>${type}</small></td>
                     <td>${orderDate}</td>
                     <td><b>${origin}</b></td>
-                    <td>${renderTimestampCell(rowIndex, 'IN LOAD', row['IN LOAD'])}</td>
-                    <td>${renderTimestampCell(rowIndex, 'OUT LOAD', row['OUT LOAD'])}</td>
+                    <td>${renderTimestampCell(rowIndex, nopol, orderDate, 'IN LOAD', row['IN LOAD'])}</td>
+                    <td>${renderTimestampCell(rowIndex, nopol, orderDate, 'OUT LOAD', row['OUT LOAD'])}</td>
                     <td><b>${destination}</b></td>
                     <td><span class="badge-status ${s1Class}">${status1}</span></td>
                     <td><small>${updatePosition}</small></td>
-                    <td>${renderTimestampCell(rowIndex, 'OUT CUST.', row['OUT CUST.'] || row['OUT CUST'])}</td>
-                    <td>${renderTimestampCell(rowIndex, 'IN CUST.', row['IN CUST.'] || row['IN CUST'])}</td>
                     <td>
-                        <select class="table-select" onchange="saveStatus2Inline(${rowIndex}, this.value)">
+                        <select class="table-select" onchange="saveStatus2Inline(${rowIndex}, '${nopol}', '${orderDate}', this.value)">
                             <option value="" ${status2 === '' ? 'selected' : ''}>-- Pilih Status --</option>
                             <option value="FINISH DO" ${status2 === 'FINISH DO' ? 'selected' : ''}>FINISH DO</option>
                             <option value="ANTRI MUAT" ${status2 === 'ANTRI MUAT' ? 'selected' : ''}>ANTRI MUAT</option>
@@ -649,6 +646,8 @@
                             <option value="CANCEL" ${status2 === 'CANCEL' ? 'selected' : ''}>CANCEL</option>
                         </select>
                     </td>
+                    <td>${renderTimestampCell(rowIndex, nopol, orderDate, 'OUT CUST.', row['OUT CUST.'] || row['OUT CUST'])}</td>
+                    <td>${renderTimestampCell(rowIndex, nopol, orderDate, 'IN CUST.', row['IN CUST.'] || row['IN CUST'])}</td>
                     <td><span style="font-size:12px; color:#555;">${keterangan}</span></td>
                 `;
                 tbody.appendChild(tr);
@@ -656,16 +655,16 @@
         }
 
         // Render struktur tombol timestamp / teks jam kustom
-        function renderTimestampCell(rowIndex, fieldName, currentVal) {
+        function renderTimestampCell(rowIndex, nopol, orderDate, fieldName, currentVal) {
             if (currentVal && String(currentVal).trim() !== "") {
-                return `<div class="ts-btn filled" style="cursor:pointer;" title="Klik untuk mengubah/edit waktu" onclick="enableInlinePicker(this, ${rowIndex}, '${fieldName}', '${currentVal}')">⏱️ ${currentVal}</div>`;
+                return `<div class="ts-btn filled" style="cursor:pointer;" title="Klik untuk mengubah/edit waktu" onclick="enableInlinePicker(this, ${rowIndex}, '${nopol}', '${orderDate}', '${fieldName}', '${currentVal}')">⏱️ ${currentVal}</div>`;
             } else {
-                return `<button type="button" class="ts-btn" onclick="enableInlinePicker(this, ${rowIndex}, '${fieldName}', '')">➕ Set Time</button>`;
+                return `<button type="button" class="ts-btn" onclick="enableInlinePicker(this, ${rowIndex}, '${nopol}', '${orderDate}', '${fieldName}', '')">➕ Set Time</button>`;
             }
         }
 
         // Mengubah tombol menjadi DateTime Picker lokal di baris tabel
-        function enableInlinePicker(element, rowIndex, fieldName, currentVal) {
+        function enableInlinePicker(element, rowIndex, nopol, orderDate, fieldName, currentVal) {
             if (element.tagName === 'DIV' && element.querySelector('input')) return;
             
             let defaultVal = "";
@@ -692,7 +691,7 @@
                     <button type="button" class="ts-btn filled" 
                             style="background-color: #2ecc71; color: white; border: none; padding: 2px 6px; border-radius: 4px; height: 26px; display: flex; align-items: center;" 
                             title="Simpan pembaruan waktu"
-                            onclick="saveInlineTimestamp(${rowIndex}, '${fieldName}', '${safeId}')">
+                            onclick="saveInlineTimestamp(${rowIndex}, '${nopol}', '${orderDate}', '${fieldName}', '${safeId}')">
                         💾
                     </button>
                     <button type="button" class="ts-btn" 
@@ -705,8 +704,8 @@
             `;
         }
 
-        // Fungsi kirim data pembaruan waktu kustom ke Google Apps Script
-        function saveInlineTimestamp(rowIndex, fieldName, pickerId) {
+        // Fungsi kirim data pembaruan waktu kustom ke Google Apps Script (Identifikasi Ganda)
+        function saveInlineTimestamp(rowIndex, nopol, orderDate, fieldName, pickerId) {
             const picker = document.getElementById(pickerId);
             if (!picker || !picker.value) {
                 alert("Silakan tentukan pilihan tanggal dan waktu!");
@@ -719,7 +718,10 @@
 
             const payload = {
                 "action": "update",
-                "ROW_INDEX": rowIndex
+                "ROW_INDEX": rowIndex,
+                "NOPOL": nopol,
+                "ORDER DATE": orderDate,
+                "CORDER DATE": orderDate
             };
             payload[fieldName] = formattedTimestamp;
 
@@ -743,8 +745,8 @@
             });
         }
 
-        // FUNGSI UTAMA: Otomatis kirim data perubahan STATUS 2 ke Google Sheet saat dropdown dirubah (Logic 1 & 2)
-        function saveStatus2Inline(rowIndex, selectedValue) {
+        // FUNGSI REAL-TIME: Mengirim data perubahan STATUS 2 dengan menyertakan NOPOL & ORDER DATE
+        function saveStatus2Inline(rowIndex, nopol, orderDate, selectedValue) {
             if (!selectedValue) return;
 
             showLoading(true, `Memperbarui STATUS 2 ke ${selectedValue}...`);
@@ -752,6 +754,9 @@
             const payload = {
                 "action": "update",
                 "ROW_INDEX": rowIndex,
+                "NOPOL": nopol,
+                "ORDER DATE": orderDate,
+                "CORDER DATE": orderDate,
                 "STATUS 2": selectedValue
             };
 
@@ -762,7 +767,7 @@
             .then(res => res.json())
             .then(result => {
                 if (result.status === 'success') {
-                    fetchDashboardData(); // Otomatis refresh data agar tampilan UI sinkron kembali dengan Google Sheet terbaru
+                    fetchDashboardData(); // Refresh data otomatis agar visual UI sinkron sempurna
                 } else {
                     alert("Gagal memperbarui STATUS 2: " + result.message);
                     showLoading(false);
