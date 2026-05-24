@@ -319,7 +319,7 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
+            0 { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
     </style>
@@ -407,6 +407,7 @@
                                 <option value="FINISH DO">FINISH DO</option>
                                 <option value="ANTRI MUAT">ANTRI MUAT</option>
                                 <option value="ANTRI BONGKAR">ANTRI BONGKAR</option>
+                                <option value="ON DELIVERY">ON DELIVERY</option>
                                 <option value="STANDBY">STANDBY</option>
                                 <option value="CANCEL">CANCEL</option>
                             </select>
@@ -641,6 +642,7 @@
                             <option value="FINISH DO" ${status2 === 'FINISH DO' ? 'selected' : ''}>FINISH DO</option>
                             <option value="ANTRI MUAT" ${status2 === 'ANTRI MUAT' ? 'selected' : ''}>ANTRI MUAT</option>
                             <option value="ANTRI BONGKAR" ${status2 === 'ANTRI BONGKAR' ? 'selected' : ''}>ANTRI BONGKAR</option>
+                            <option value="ON DELIVERY" ${status2 === 'ON DELIVERY' ? 'selected' : ''}>ON DELIVERY</option>
                             <option value="STANDBY" ${status2 === 'STANDBY' ? 'selected' : ''}>STANDBY</option>
                             <option value="CANCEL" ${status2 === 'CANCEL' ? 'selected' : ''}>CANCEL</option>
                         </select>
@@ -758,7 +760,7 @@
             .then(res => res.json())
             .then(result => {
                 if (result.status === 'success') {
-                    fetchDashboardData(); // Refresh data agar tampilan UI sinkron kembali dengan Google Sheet
+                    fetchDashboardData(); // Otomatis refresh data agar tampilan UI sinkron kembali dengan Google Sheet terbaru
                 } else {
                     alert("Gagal memperbarui STATUS 2: " + result.message);
                     showLoading(false);
