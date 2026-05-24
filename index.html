@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seino Shopee Logisly Lead Time Dashboard</title>
+    <title>Seino Shopee Logisly Lead Time Dashboard - Rizky SIL 1806</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --primary-color: #e54d2a; /* Shopee Orange Theme */
@@ -24,7 +25,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            /* Anti-Select Text untuk proteksi penggandaan data serampangan */
+            /* Anti-Select Text untuk proteksi hak cipta */
             user-select: none;
         }
 
@@ -223,7 +224,7 @@
         }
 
         .search-box {
-            max-width: 280px;
+            max-width: 250px;
         }
 
         .date-filter-box {
@@ -247,6 +248,45 @@
         .btn-clear-date:hover {
             background-color: #e4e5e9;
         }
+
+        .export-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-export-view {
+            background-color: var(--info-color);
+            color: white;
+            border: none;
+            padding: 9px 15px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .btn-export-view:hover { background-color: #2980b9; }
+
+        .btn-export-save {
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            padding: 9px 15px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .btn-export-save:hover { background-color: #27ae60; }
 
         .table-container {
             width: 100%;
@@ -282,6 +322,46 @@
         tr:hover {
             background-color: #fafffa;
         }
+
+        /* Timestamp Live Update Buttons */
+        .ts-btn {
+            background-color: #f1f2f6;
+            border: 1px solid #cbd5e0;
+            color: #4a5568;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .ts-btn:hover {
+            background-color: #e2e8f0;
+            border-color: #a0aec0;
+        }
+
+        .ts-btn.filled {
+            background-color: #e6fffa;
+            color: #006d5b;
+            border-color: #b2f5ea;
+        }
+
+        /* Status Row Labels */
+        .badge-status {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-open { background-color: #e3f2fd; color: #0d47a1; }
+        .status-close { background-color: #e8f5e9; color: #1b5e20; }
+        .status-cancel { background-color: #ffebee; color: #c62828; }
+        .status-generic { background-color: #f5f5f5; color: #424242; }
 
         /* Copyright Footer */
         .secure-footer {
@@ -421,7 +501,7 @@
             </div>
 
             <div class="right-panel">
-                <div class="card">
+                <div class="card" id="dashboardTableCard">
                     <div class="card-title">📊 Live Monitoring & Update Timestamp</div>
                     
                     <div class="table-toolbar">
@@ -434,7 +514,13 @@
                                 <button type="button" class="btn-clear-date" onclick="clearDateFilter()">Semua</button>
                             </div>
                         </div>
-                        <div style="font-size: 13px; color: var(--text-muted); font-weight: 500;" id="rowCountText">
+
+                        <div class="export-controls">
+                            <button type="button" class="btn-export-view" onclick="exportDashboardAsJpg('view')">👁️ View JPG</button>
+                            <button type="button" class="btn-export-save" onclick="exportDashboardAsJpg('save')">💾 Save JPG</button>
+                        </div>
+
+                        <div style="font-size: 13px; color: var(--text-muted); font-weight: 500; width: 100%; margin-top: 5px;" id="rowCountText">
                             Menampilkan 0 data operasional
                         </div>
                     </div>
@@ -484,11 +570,10 @@
            ========================================================================= */
         document.addEventListener('contextmenu', event => {
             event.preventDefault();
-            alert("⚠️ PROSEDUK KEAMANAN DASBOR:\nHak Cipta & Paten Terdaftar. Aplikasi ini dibuat eksklusif oleh Rizky SIL 1806.");
+            alert("⚠️ PROSEDUR KEAMANAN DASBOR:\nHak Cipta & Paten Terdaftar. Aplikasi ini dibuat eksklusif oleh Rizky SIL 1806.");
         });
 
         document.addEventListener('keydown', event => {
-            // Blokir F12 (123), Ctrl+Shift+I (73), Ctrl+Shift+J (74), Ctrl+U (85)
             if (event.keyCode == 123 || 
                 (event.ctrlKey && event.shiftKey && (event.keyCode == 73 || event.keyCode == 74)) || 
                 (event.ctrlKey && event.keyCode == 85)) {
@@ -498,7 +583,6 @@
             }
         });
 
-        // Console Safeguard Injection
         setInterval(() => {
             console.clear();
             console.log("%cSTOP!", "color: red; font-size: 30px; font-weight: bold; text-shadow: 2px 2px black;");
@@ -642,14 +726,14 @@
                 const destination = row['DESTINATION'] || '';
                 const status1 = (row['STATUS 1'] || row['Status 1'] || 'OPEN').toUpperCase().trim();
                 const updatePosition = row['UPDATE POSITION'] || row['Update Position'] || '';
-                const status2 = (row['STATUS 2'] || row['Status 2'] || '').toUpperCase().trim();
+                const status2 = (row['STATUS 2'] || row['STATUS 2'] || '').toUpperCase().trim();
                 const keterangan = row['KETERANGAN'] || '';
                 const rowIndex = row['ROW_INDEX'];
 
-                const inLoad = row['IN LOAD'] || '';
-                const outLoad = row['OUT LOAD'] || '';
-                const outCust = row['OUT CUST.'] || row['OUT CUST'] || '';
-                const inCust = row['IN CUST.'] || row['IN CUST'] || '';
+                let s1Class = "status-generic";
+                if(status1 === "OPEN") s1Class = "status-open";
+                if(status1 === "CLOSE") s1Class = "status-close";
+                if(status1 === "CANCEL") s1Class = "status-cancel";
 
                 tr.innerHTML = `
                     <td style="font-weight:bold; color:#777;">${sortedLogs.length - idx}</td>
@@ -658,36 +742,13 @@
                     <td><small>${type}</small></td>
                     <td>${orderDate}</td>
                     <td><b>${origin}</b></td>
-                    <td>
-                        <input type="text" class="form-control" style="padding: 4px 8px; font-size: 12px; height: 28px; width: 130px;" 
-                               value="${inLoad}" placeholder="Jam IN LOAD..." 
-                               onchange="saveFieldInline(${rowIndex}, '${nopol}', 'IN LOAD', this.value)">
-                    </td>
-                    <td>
-                        <input type="text" class="form-control" style="padding: 4px 8px; font-size: 12px; height: 28px; width: 130px;" 
-                               value="${outLoad}" placeholder="Jam OUT LOAD..." 
-                               onchange="saveFieldInline(${rowIndex}, '${nopol}', 'OUT LOAD', this.value)">
-                    </td>
+                    <td>${renderTimestampCell(rowIndex, nopol, 'IN LOAD', row['IN LOAD'])}</td>
+                    <td>${renderTimestampCell(rowIndex, nopol, 'OUT LOAD', row['OUT LOAD'])}</td>
                     <td><b>${destination}</b></td>
-                    <td>
-                        <select class="form-control" style="padding: 2px 4px; font-size: 12px; height: 28px; width: 95px; font-weight: 600;" 
-                                onchange="saveFieldInline(${rowIndex}, '${nopol}', 'STATUS 1', this.value)">
-                            <option value="OPEN" ${status1 === "OPEN" ? "selected" : ""}>OPEN</option>
-                            <option value="CLOSE" ${status1 === "CLOSE" ? "selected" : ""}>CLOSE</option>
-                            <option value="CANCEL" ${status1 === "CANCEL" ? "selected" : ""}>CANCEL</option>
-                        </select>
-                    </td>
+                    <td><span class="badge-status ${s1Class}">${status1}</span></td>
                     <td><small>${updatePosition}</small></td>
-                    <td>
-                        <input type="text" class="form-control" style="padding: 4px 8px; font-size: 12px; height: 28px; width: 130px;" 
-                               value="${outCust}" placeholder="Jam OUT CUST..." 
-                               onchange="saveFieldInline(${rowIndex}, '${nopol}', 'OUT CUST.', this.value)">
-                    </td>
-                    <td>
-                        <input type="text" class="form-control" style="padding: 4px 8px; font-size: 12px; height: 28px; width: 130px;" 
-                               value="${inCust}" placeholder="Jam IN CUST..." 
-                               onchange="saveFieldInline(${rowIndex}, '${nopol}', 'IN CUST.', this.value)">
-                    </td>
+                    <td>${renderTimestampCell(rowIndex, nopol, 'OUT CUST.', row['OUT CUST.'] || row['OUT CUST'])}</td>
+                    <td>${renderTimestampCell(rowIndex, nopol, 'IN CUST.', row['IN CUST.'] || row['IN CUST'])}</td>
                     <td>
                         <input type="text" class="form-control" style="padding: 4px 8px; font-size: 12px; height: 28px; width: 130px;" 
                                value="${status2}" placeholder="Ketik status..." 
@@ -697,6 +758,65 @@
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        function renderTimestampCell(rowIndex, nopol, fieldName, currentVal) {
+            if (currentVal && String(currentVal).trim() !== "") {
+                return `<div class="ts-btn filled" style="cursor:pointer;" title="Klik untuk mengubah/edit waktu" onclick="enableInlinePicker(this, ${rowIndex}, '${nopol}', '${fieldName}', '${currentVal}')">⏱️ ${currentVal}</div>`;
+            } else {
+                return `<button type="button" class="ts-btn" onclick="enableInlinePicker(this, ${rowIndex}, '${nopol}', '${fieldName}', '')">➕ Set Time</button>`;
+            }
+        }
+
+        function enableInlinePicker(element, rowIndex, nopol, fieldName, currentVal) {
+            if (element.tagName === 'DIV' && element.querySelector('input')) return;
+            
+            let defaultVal = "";
+            if (currentVal && currentVal.trim() !== "") {
+                let parts = currentVal.split(' ');
+                if (parts.length >= 2) {
+                    defaultVal = parts[0] + 'T' + parts[1].substring(0, 5);
+                } else {
+                    defaultVal = currentVal.replace(' ', 'T').substring(0, 16);
+                }
+            } else {
+                const now = new Date();
+                const tzoffset = now.getTimezoneOffset() * 60000;
+                defaultVal = (new Date(now - tzoffset)).toISOString().slice(0, 16);
+            }
+
+            const safeId = `picker_${rowIndex}_${fieldName.replace(/[^a-zA-Z0-9]/g, '')}`;
+            
+            element.parentElement.innerHTML = `
+                <div style="display: flex; gap: 4px; align-items: center;">
+                    <input type="datetime-local" id="${safeId}" class="form-control" 
+                           style="padding: 2px 4px; font-size: 11px; width: 145px; height: 26px; border-color: var(--primary-color);" 
+                           value="${defaultVal}">
+                    <button type="button" class="ts-btn filled" 
+                            style="background-color: #2ecc71; color: white; border: none; padding: 2px 6px; border-radius: 4px; height: 26px; display: flex; align-items: center;" 
+                            title="Simpan pembaruan waktu"
+                            onclick="saveInlineTimestamp(${rowIndex}, '${nopol}', '${fieldName}', '${safeId}')">
+                        💾
+                    </button>
+                    <button type="button" class="ts-btn" 
+                            style="background-color: #e74c3c; color: white; border: none; padding: 2px 6px; border-radius: 4px; height: 26px; display: flex; align-items: center;" 
+                            title="Batalkan"
+                            onclick="fetchDashboardData()">
+                        ❌
+                    </button>
+                </div>
+            `;
+        }
+
+        function saveInlineTimestamp(rowIndex, nopol, fieldName, pickerId) {
+            const picker = document.getElementById(pickerId);
+            if (!picker || !picker.value) {
+                alert("Silakan tentukan pilihan tanggal dan waktu!");
+                return;
+            }
+
+            const formattedTimestamp = picker.value.replace('T', ' ') + ":00";
+            saveFieldInline(rowIndex, nopol, fieldName, formattedTimestamp);
         }
 
         function saveFieldInline(rowIndex, nopol, fieldName, fieldValue) {
@@ -805,6 +925,58 @@
         function clearDateFilter() {
             document.getElementById('dateFilter').value = '';
             filterTable();
+        }
+
+        /* =========================================================================
+           📸 ENGINE EKSPOR GAMBAR DASHBOARD (html2canvas)
+           ========================================================================= */
+        function exportDashboardAsJpg(action) {
+            const targetCard = document.getElementById('dashboardTableCard');
+            const dateInput = document.getElementById('dateFilter').value;
+            
+            // Format penamaan file gambar berdasarkan tanggal filter yang dipilih
+            const dateFormatted = dateInput ? dateInput : new Date().toISOString().split('T')[0];
+            const fileName = `Dashboard_Logistik_${dateFormatted}.jpg`;
+
+            showLoading(true, "Mengekstrak tampilan tabel ke JPG...");
+
+            // Konfigurasi html2canvas agar kualitas jernih
+            html2canvas(targetCard, {
+                useCORS: true,
+                scale: 2, // Menaikkan resolusi agar teks tidak buram
+                backgroundColor: "#ffffff"
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                showLoading(false);
+
+                if (action === 'save') {
+                    // Eksekusi aksi download otomatis
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = imgData;
+                    downloadLink.download = fileName;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                } else if (action === 'view') {
+                    // Eksekusi aksi buka gambar di tab baru browser
+                    const previewWindow = window.open();
+                    if (previewWindow) {
+                        previewWindow.document.write(`
+                            <title>Preview - ${fileName}</title>
+                            <body style="margin:0; background:#222; display:flex; justify-content:center; align-items:center; min-height:100vh;">
+                                <img src="${imgData}" style="max-width:100%; box-shadow:0 0 20px rgba(0,0,0,0.5); border-radius:4px;">
+                            </body>
+                        `);
+                        previewWindow.document.close();
+                    } else {
+                        alert("Gagal membuka halaman preview. Mohon izinkan izin 'Pop-up' pada browser Anda.");
+                    }
+                }
+            }).catch(err => {
+                console.error(err);
+                showLoading(false);
+                alert("Gagal memproses gambar dashboard.");
+            });
         }
 
         function showLoading(isVisible, message = "Memuat enkripsi data logistik..") {
