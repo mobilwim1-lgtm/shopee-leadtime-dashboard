@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Seino Shopee Logisly Lead Time Dashboard</title>
+
     <style>
+
         :root {
             --primary-color: #e54d2a;
             --primary-hover: #ca3e1e;
@@ -13,230 +16,826 @@
             --text-color: #333333;
             --text-muted: #666666;
             --border-color: #e0e0e0;
-            --success-color: #2ecc71;
-            --warning-color: #f1c40f;
-            --danger-color: #e74c3c;
-            --info-color: #3498db;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
-        body { background-color: var(--bg-color); color: var(--text-color); padding: 20px; font-size: 14px; position: relative; }
-        
-        body::before {
-            content: "PROPERTY OF RIZKY SIL 1806 - PATENTED SYSTEM";
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg);
-            font-size: 4rem; font-weight: 900; color: rgba(0, 0, 0, 0.02); white-space: nowrap; pointer-events: none; z-index: 0; letter-spacing: 5px;
+        *{
+            box-sizing:border-box;
+            margin:0;
+            padding:0;
+            font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+            user-select:none;
         }
 
-        .container { max-width: 1450px; margin: 0 auto; position: relative; z-index: 1; }
+        body{
+            background:var(--bg-color);
+            color:var(--text-color);
+            padding:20px;
+        }
 
-        header { background: linear-gradient(135deg, var(--primary-color), #ff7657); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(229, 77, 42, 0.2); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
-        header h1 { font-size: 24px; font-weight: 600; }
-        .btn-refresh { background-color: white; color: var(--primary-color); border: none; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn-refresh:hover { background-color: #fff3f0; transform: translateY(-2px); }
+        .container{
+            max-width:1450px;
+            margin:auto;
+        }
 
-        .dashboard-grid { display: grid; grid-template-columns: 360px 1fr; gap: 20px; }
-        @media (max-width: 992px) { .dashboard-grid { grid-template-columns: 1fr; } }
+        header{
+            background:linear-gradient(135deg,var(--primary-color),#ff7657);
+            color:white;
+            padding:20px;
+            border-radius:10px;
+            margin-bottom:20px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            flex-wrap:wrap;
+            gap:15px;
+            box-shadow:0 4px 15px rgba(229,77,42,0.2);
+        }
 
-        .card { background-color: var(--card-bg); border-radius: 10px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); margin-bottom: 20px; }
-        .card-title { font-size: 16px; font-weight: 600; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid var(--bg-color); color: #222; }
-        
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: var(--text-muted); }
-        .form-control { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; outline: none; transition: border-color 0.2s; }
-        .form-control:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(229, 77, 42, 0.1); }
+        header h1{
+            font-size:24px;
+        }
 
-        .status-badge { margin-top: 6px; padding: 6px 10px; border-radius: 4px; font-size: 12px; font-weight: 500; display: none; }
-        .status-badge.warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; display: block; }
-        .status-badge.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; display: block; }
+        .btn-refresh{
+            background:white;
+            color:var(--primary-color);
+            border:none;
+            padding:10px 20px;
+            border-radius:6px;
+            cursor:pointer;
+            font-weight:bold;
+        }
 
-        .btn-submit { width: 100%; background-color: var(--primary-color); color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
-        .btn-submit:hover { background-color: var(--primary-hover); }
+        .dashboard-grid{
+            display:grid;
+            grid-template-columns:360px 1fr;
+            gap:20px;
+        }
 
-        .table-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px; }
-        .filter-controls { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; flex-grow: 1; }
-        .search-box { max-width: 280px; }
-        .date-filter-box { display: flex; align-items: center; gap: 6px; }
-        .btn-clear-date { background-color: #f1f2f6; color: #333; border: 1px solid var(--border-color); padding: 8px 12px; font-size: 13px; font-weight: 500; border-radius: 6px; cursor: pointer; }
-        .btn-clear-date:hover { background-color: #e4e5e9; }
-        
-        .btn-view-jpg { background-color: #3498db; color: white; border: 1px solid #2980b9; padding: 8px 12px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-left: 5px; }
-        .btn-save-jpg { background-color: #2ecc71; color: white; border: 1px solid #27ae60; padding: 8px 12px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-left: 3px; }
+        @media(max-width:992px){
+            .dashboard-grid{
+                grid-template-columns:1fr;
+            }
+        }
 
-        .table-container { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid var(--border-color); }
-        table { width: 100%; border-collapse: collapse; text-align: left; background-color: white; min-width: 1350px; }
-        th { background-color: #f8f9fa; color: #333; font-weight: 600; padding: 12px 10px; border-bottom: 2px solid var(--border-color); white-space: nowrap; }
-        td { padding: 10px; border-bottom: 1px solid var(--border-color); vertical-align: middle; white-space: nowrap; }
-        tr:hover { background-color: #fafffa; }
+        .card{
+            background:white;
+            border-radius:10px;
+            padding:20px;
+            border:1px solid var(--border-color);
+            box-shadow:0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom:20px;
+        }
 
-        .secure-footer { text-align: center; margin-top: 40px; padding: 20px; color: #777; border-top: 1px solid var(--border-color); font-size: 12px; }
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; font-size: 18px; font-weight: bold; color: var(--primary-color); transition: opacity 0.3s ease; }
-        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .card-title{
+            font-size:16px;
+            font-weight:600;
+            margin-bottom:15px;
+            padding-bottom:8px;
+            border-bottom:2px solid #f0f0f0;
+        }
+
+        .form-group{
+            margin-bottom:15px;
+        }
+
+        .form-group label{
+            display:block;
+            margin-bottom:6px;
+            font-weight:600;
+            color:var(--text-muted);
+        }
+
+        .form-control{
+            width:100%;
+            padding:10px;
+            border:1px solid var(--border-color);
+            border-radius:6px;
+            outline:none;
+            font-size:14px;
+        }
+
+        .btn-submit{
+            width:100%;
+            background:var(--primary-color);
+            color:white;
+            border:none;
+            padding:12px;
+            border-radius:6px;
+            cursor:pointer;
+            font-weight:bold;
+        }
+
+        .table-toolbar{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            flex-wrap:wrap;
+            gap:15px;
+            margin-bottom:15px;
+        }
+
+        .filter-controls{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            align-items:center;
+        }
+
+        .search-box{
+            max-width:280px;
+        }
+
+        .table-container{
+            overflow-x:auto;
+            border:1px solid var(--border-color);
+            border-radius:8px;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            min-width:1350px;
+            background:white;
+        }
+
+        th{
+            background:#f8f9fa;
+            padding:12px 10px;
+            border-bottom:2px solid var(--border-color);
+            white-space:nowrap;
+            font-size:13px;
+        }
+
+        td{
+            padding:10px;
+            border-bottom:1px solid var(--border-color);
+            white-space:nowrap;
+            font-size:13px;
+        }
+
+        tr:hover{
+            background:#fafffa;
+        }
+
+        .btn-clear-date,
+        .btn-view-jpg,
+        .btn-save-jpg{
+            border:none;
+            padding:8px 12px;
+            border-radius:6px;
+            cursor:pointer;
+            font-size:13px;
+            font-weight:bold;
+        }
+
+        .btn-clear-date{
+            background:#f1f2f6;
+        }
+
+        .btn-view-jpg{
+            background:#3498db;
+            color:white;
+        }
+
+        .btn-save-jpg{
+            background:#2ecc71;
+            color:white;
+        }
+
+        .overlay{
+            position:fixed;
+            inset:0;
+            background:rgba(255,255,255,0.9);
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            flex-direction:column;
+            z-index:9999;
+        }
+
+        .spinner{
+            width:40px;
+            height:40px;
+            border:4px solid #f3f3f3;
+            border-top:4px solid var(--primary-color);
+            border-radius:50%;
+            animation:spin 1s linear infinite;
+            margin-bottom:15px;
+        }
+
+        @keyframes spin{
+            0%{transform:rotate(0deg);}
+            100%{transform:rotate(360deg);}
+        }
+
     </style>
 </head>
+
 <body>
 
-    <div id="loadingOverlay" class="overlay">
-        <div class="spinner"></div>
-        <div id="loadingText">Memuat enkripsi data logistik..</div>
-    </div>
+<div id="loadingOverlay" class="overlay">
+    <div class="spinner"></div>
+    <div id="loadingText">Memuat data...</div>
+</div>
 
-    <div class="container">
-        <header>
-            <div>
-                <h1>Seino Shopee Logisly Lead Time Dashboard</h1>
-                <p style="font-size: 12px; opacity: 0.9; margin-top: 4px;">Sistem Hak Paten & Hak Cipta Milik: <b>Rizky SIL 1806</b></p>
-            </div>
-            <button class="btn-refresh" onclick="fetchDashboardData()">🔄 Sinkronisasi & Refresh Data</button>
-        </header>
+<div class="container">
 
-        <div class="dashboard-grid">
-            <div class="left-panel">
-                <div class="card">
-                    <div class="card-title">📝 Input Data Operasional Baru</div>
-                    <form id="logForm" onsubmit="handleFormSubmit(event)">
-                        <div class="form-group">
-                            <label for="nopolInput">Nomor Polisi (NOPOL)</label>
-                            <input type="text" id="nopolInput" class="form-control" placeholder="Contoh: B 1234 ABC" required oninput="handleNopolCheck()">
-                            <div id="nopolStatus" class="status-badge"></div>
-                        </div>
-                        <div class="form-group"><label>Nama Driver</label><input type="text" id="driverName" class="form-control" required placeholder="Terisi otomatis / manual"></div>
-                        <div class="form-group"><label>No HP Driver</label><input type="text" id="noHp" class="form-control" required placeholder="Terisi otomatis / manual"></div>
-                        <div class="form-group"><label>Type Truk</label><input type="text" id="truckType" class="form-control" required placeholder="Terisi otomatis / manual"></div>
-                        <div class="form-group"><label>Order Date</label><input type="date" id="orderDate" class="form-control" required></div>
-                        <div class="form-group"><label>Origin (Gudang Asal)</label><input type="text" id="originInput" class="form-control" list="warehouseList" required></div>
-                        <div class="form-group"><label>Destination (Gudang Tujuan)</label><input type="text" id="destinationInput" class="form-control" list="warehouseList" required></div>
-                        <div class="form-group"><label>Status 1</label><select id="status1Input" class="form-control" required><option value="OPEN">OPEN</option><option value="CLOSE">CLOSE</option><option value="CANCEL">CANCEL</option></select></div>
-                        <div class="form-group"><label>Update Position</label><input type="text" id="updatePositionInput" class="form-control" required></div>
-                        <div class="form-group"><label>STATUS 2</label><input type="text" id="status2Input" class="form-control" required></div>
-                        <div class="form-group"><label>Keterangan</label><textarea id="keteranganInput" class="form-control" rows="2"></textarea></div>
-                        <button type="submit" class="btn-submit">💾 Simpan ke Google Sheet</button>
-                    </form>
+    <header>
+        <div>
+            <h1>Seino Shopee Logisly Lead Time Dashboard</h1>
+        </div>
+
+        <button class="btn-refresh" onclick="fetchDashboardData()">
+            🔄 Refresh Data
+        </button>
+    </header>
+
+    <div class="dashboard-grid">
+
+        <!-- LEFT -->
+        <div>
+
+            <div class="card">
+
+                <div class="card-title">
+                    📝 Input Data
                 </div>
+
+                <form id="logForm">
+
+                    <div class="form-group">
+                        <label>NOPOL</label>
+                        <input type="text"
+                               id="nopolInput"
+                               class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Driver</label>
+                        <input type="text"
+                               id="driverName"
+                               class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Order Date</label>
+                        <input type="date"
+                               id="orderDate"
+                               class="form-control">
+                    </div>
+
+                    <button class="btn-submit">
+                        💾 Simpan
+                    </button>
+
+                </form>
+
             </div>
 
-            <div class="right-panel">
-                <div class="card" id="tableCardToCapture">
-                    <div class="card-title">📊 Live Monitoring & Update Timestamp</div>
-                    
+        </div>
+
+        <!-- RIGHT -->
+        <div>
+
+            <!-- VIEW MODE -->
+            <div id="viewModeContainer"
+                 style="display:none;">
+
+                <div class="card">
+
+                    <div class="card-title">
+                        🖥️ View Monitoring Sesuai Tanggal
+                    </div>
+
                     <div class="table-toolbar">
-                        <div class="filter-controls">
-                            <input type="text" id="tableSearch" class="form-control search-box" placeholder="🔍 Cari Nopol / Driver / Gudang.." oninput="filterTable()">
-                            <div class="date-filter-box">
-                                <label for="dateFilter" style="font-weight: 600; color: var(--text-muted);">📅 Tanggal:</label>
-                                <input type="date" id="dateFilter" class="form-control" style="width: 150px; padding: 7px 10px;" onchange="filterTable()">
-                                <button type="button" class="btn-clear-date" onclick="clearDateFilter()">Semua</button>
-                                <button type="button" class="btn-view-jpg" onclick="processDashboardJpg('view')">👁️ View JPG</button>
-                                <button type="button" class="btn-save-jpg" onclick="processDashboardJpg('save')">💾 Save JPG</button>
-                            </div>
+
+                        <div style="font-size:13px;color:#666;">
+                            Tampilan sama persis dengan
+                            Live Monitoring
                         </div>
-                        <div style="font-size: 13px; color: var(--text-muted);" id="rowCountText">Menampilkan 0 data operasional</div>
+
+                        <button class="btn-clear-date"
+                                onclick="closeViewMode()">
+                            ❌ Tutup View
+                        </button>
+
                     </div>
 
                     <div class="table-container">
+
                         <table>
+
                             <thead>
-                                <tr>
-                                    <th>NO</th><th>NOPOL</th><th>DRIVER NAME</th><th>TYPE</th><th>ORDER DATE</th><th>ORIGIN</th><th>IN LOAD</th><th>OUT LOAD</th><th>DESTINATION</th><th>STATUS 1</th><th>UPDATE POSITION</th>
-                                    <th>IN CUST.</th><th>OUT CUST.</th>
-                                    <th>STATUS 2</th><th>KETERANGAN</th>
-                                </tr>
+                            <tr>
+                                <th>NO</th>
+                                <th>NOPOL</th>
+                                <th>DRIVER NAME</th>
+                                <th>TYPE</th>
+                                <th>ORDER DATE</th>
+                                <th>ORIGIN</th>
+                                <th>IN LOAD</th>
+                                <th>OUT LOAD</th>
+                                <th>DESTINATION</th>
+                                <th>STATUS 1</th>
+                                <th>UPDATE POSITION</th>
+                                <th>OUT CUST.</th>
+                                <th>IN CUST.</th>
+                                <th>STATUS 2</th>
+                                <th>KETERANGAN</th>
+                            </tr>
                             </thead>
-                            <tbody id="logsTableBody"></tbody>
+
+                            <tbody id="viewTableBody">
+                            </tbody>
+
                         </table>
+
                     </div>
+
                 </div>
+
             </div>
+
+            <!-- LIVE -->
+            <div class="card"
+                 id="tableCardToCapture">
+
+                <div class="card-title">
+                    📊 Live Monitoring & Update Timestamp
+                </div>
+
+                <div class="table-toolbar">
+
+                    <div class="filter-controls">
+
+                        <input type="text"
+                               id="tableSearch"
+                               class="form-control search-box"
+                               placeholder="Cari data..."
+                               oninput="filterTable()">
+
+                        <input type="date"
+                               id="dateFilter"
+                               class="form-control"
+                               style="width:160px;"
+                               onchange="filterTable()">
+
+                        <button class="btn-clear-date"
+                                onclick="clearDateFilter()">
+                            Semua
+                        </button>
+
+                        <button class="btn-view-jpg"
+                                onclick="processDashboardJpg('view')">
+                            👁️ View
+                        </button>
+
+                        <button class="btn-save-jpg"
+                                onclick="processDashboardJpg('save')">
+                            💾 Save JPG
+                        </button>
+
+                    </div>
+
+                    <div id="rowCountText"
+                         style="font-size:13px;color:#666;">
+                        0 Data
+                    </div>
+
+                </div>
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+
+                        <tr>
+                            <th>NO</th>
+                            <th>NOPOL</th>
+                            <th>DRIVER NAME</th>
+                            <th>TYPE</th>
+                            <th>ORDER DATE</th>
+                            <th>ORIGIN</th>
+                            <th>IN LOAD</th>
+                            <th>OUT LOAD</th>
+                            <th>DESTINATION</th>
+                            <th>STATUS 1</th>
+                            <th>UPDATE POSITION</th>
+                            <th>OUT CUST.</th>
+                            <th>IN CUST.</th>
+                            <th>STATUS 2</th>
+                            <th>KETERANGAN</th>
+                        </tr>
+
+                        </thead>
+
+                        <tbody id="logsTableBody"></tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
         </div>
 
-        <footer class="secure-footer">
-            <p><b>Seino Shopee Logisly Lead Time Dashboard</b> &copy; 2026. All Rights Reserved.</p>
-        </footer>
     </div>
-    <datalist id="warehouseList"></datalist>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</div>
 
-    <script>
-        // Keamanan & Engine
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhLowM9ffwffPA-ssTLpvTzzWRDYVFrek1ySj_jZljgoVQlxB4WX8lep_fbF38687Yug/exec";
-        let database = { logs: [], units: [], warehouses: [] };
-        document.getElementById('orderDate').valueAsDate = new Date();
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-        window.addEventListener('DOMContentLoaded', () => fetchDashboardData());
+<script>
 
-        function processDashboardJpg(mode) {
-            const selectedDate = document.getElementById('dateFilter').value || "Semua_Tanggal";
-            const captureArea = document.getElementById('tableCardToCapture');
-            showLoading(true, "Memproses gambar...");
-            html2canvas(captureArea, { useCORS: true, scale: 2, windowWidth: captureArea.scrollWidth }).then(canvas => {
-                const imgDataUrl = canvas.toDataURL("image/jpeg", 0.95);
-                if (mode === 'view') {
-                    const newWindow = window.open();
-                    newWindow.document.write(`<img src="${imgDataUrl}" style="max-width:100%;">`);
-                } else {
-                    const downloadAnchor = document.createElement('a');
-                    downloadAnchor.href = imgDataUrl;
-                    downloadAnchor.download = `LOGISLY_DASHBOARD_${selectedDate}.jpg`;
-                    downloadAnchor.click();
+const APPS_SCRIPT_URL =
+"https://script.google.com/macros/s/AKfycbxhLowM9ffwffPA-ssTLpvTzzWRDYVFrek1ySj_jZljgoVQlxB4WX8lep_fbF38687Yug/exec";
+
+let database = {
+    logs:[]
+};
+
+window.addEventListener('DOMContentLoaded',()=>{
+    fetchDashboardData();
+});
+
+function fetchDashboardData(){
+
+    showLoading(true);
+
+    fetch(APPS_SCRIPT_URL)
+
+    .then(res=>res.json())
+
+    .then(data=>{
+
+        database.logs = data.logs || [];
+
+        filterTable();
+
+        showLoading(false);
+
+    })
+
+    .catch(err=>{
+
+        console.error(err);
+
+        showLoading(false);
+
+        alert("Gagal mengambil data");
+
+    });
+
+}
+
+function renderLogsTable(filteredLogs){
+
+    const tbody =
+        document.getElementById('logsTableBody');
+
+    tbody.innerHTML='';
+
+    const sortedLogs =
+        [...filteredLogs].reverse();
+
+    document.getElementById('rowCountText')
+    .innerText =
+        `Menampilkan ${sortedLogs.length} data`;
+
+    if(sortedLogs.length===0){
+
+        tbody.innerHTML=`
+        <tr>
+            <td colspan="15"
+                style="text-align:center;padding:20px;">
+                Tidak ada data
+            </td>
+        </tr>
+        `;
+
+        return;
+    }
+
+    sortedLogs.forEach((row,idx)=>{
+
+        const tr=document.createElement('tr');
+
+        tr.innerHTML=`
+
+            <td>${sortedLogs.length-idx}</td>
+            <td>${row['NOPOL']||''}</td>
+            <td>${row['DRIVER NAME']||''}</td>
+            <td>${row['TYPE']||''}</td>
+            <td>${row['CORDER DATE']||''}</td>
+            <td>${row['ORIGIN']||''}</td>
+            <td>${row['IN LOAD']||''}</td>
+            <td>${row['OUT LOAD']||''}</td>
+            <td>${row['DESTINATION']||''}</td>
+            <td>${row['STATUS 1']||''}</td>
+            <td>${row['UPDATE POSITION']||''}</td>
+            <td>${row['OUT CUST.']||''}</td>
+            <td>${row['IN CUST.']||''}</td>
+            <td>${row['STATUS 2']||''}</td>
+            <td>${row['KETERANGAN']||''}</td>
+
+        `;
+
+        tbody.appendChild(tr);
+
+    });
+
+}
+
+function renderViewMode(){
+
+    const tbody =
+        document.getElementById('viewTableBody');
+
+    tbody.innerHTML='';
+
+    const query =
+        document.getElementById('tableSearch')
+        .value.toLowerCase().trim();
+
+    const selectedDate =
+        document.getElementById('dateFilter').value;
+
+    const filtered =
+        database.logs.filter(row=>{
+
+            const nopol =
+                String(row['NOPOL']||'')
+                .toLowerCase();
+
+            const driver =
+                String(row['DRIVER NAME']||'')
+                .toLowerCase();
+
+            const origin =
+                String(row['ORIGIN']||'')
+                .toLowerCase();
+
+            const destination =
+                String(row['DESTINATION']||'')
+                .toLowerCase();
+
+            const textMatches =
+                nopol.includes(query) ||
+                driver.includes(query) ||
+                origin.includes(query) ||
+                destination.includes(query);
+
+            let dateMatches=true;
+
+            if(selectedDate){
+
+                let rowDateStr =
+                    String(
+                    row['CORDER DATE']||
+                    row['ORDER DATE']||''
+                    ).trim();
+
+                if(rowDateStr.includes('T')){
+                    rowDateStr =
+                    rowDateStr.split('T')[0];
                 }
-                showLoading(false);
-            });
-        }
 
-        function renderLogsTable(filteredLogs) {
-            const tbody = document.getElementById('logsTableBody');
-            tbody.innerHTML = '';
-            [...filteredLogs].reverse().forEach((row, idx) => {
-                const tr = document.createElement('tr');
-                const rowIndex = row['ROW_INDEX'];
-                const nopol = row['NOPOL'] || '';
-                // Data mapping
-                const inCust = row['IN CUST.'] || row['IN CUST'] || '';
-                const outCust = row['OUT CUST.'] || row['OUT CUST'] || '';
+                dateMatches =
+                    rowDateStr.includes(selectedDate);
+            }
 
-                tr.innerHTML = `
-                    <td>${filteredLogs.length - idx}</td>
-                    <td style="font-weight:600; color:var(--primary-color);">${nopol}</td>
-                    <td>${row['DRIVER NAME'] || ''}</td>
-                    <td>${row['TYPE'] || ''}</td>
-                    <td>${row['CORDER DATE'] || ''}</td>
-                    <td>${row['ORIGIN'] || ''}</td>
-                    <td><input type="text" class="form-control" style="width:130px" value="${row['IN LOAD']||''}" onchange="saveField(${rowIndex}, '${nopol}', 'IN LOAD', this.value)"></td>
-                    <td><input type="text" class="form-control" style="width:130px" value="${row['OUT LOAD']||''}" onchange="saveField(${rowIndex}, '${nopol}', 'OUT LOAD', this.value)"></td>
-                    <td>${row['DESTINATION'] || ''}</td>
-                    <td><select onchange="saveField(${rowIndex}, '${nopol}', 'STATUS 1', this.value)"><option ${row['STATUS 1']=='OPEN'?'selected':''}>OPEN</option><option ${row['STATUS 1']=='CLOSE'?'selected':''}>CLOSE</option></select></td>
-                    <td>${row['UPDATE POSITION'] || ''}</td>
-                    <td><input type="text" class="form-control" style="width:130px" value="${inCust}" onchange="saveField(${rowIndex}, '${nopol}', 'IN CUST.', this.value)"></td>
-                    <td><input type="text" class="form-control" style="width:130px" value="${outCust}" onchange="saveField(${rowIndex}, '${nopol}', 'OUT CUST.', this.value)"></td>
-                    <td><input type="text" class="form-control" style="width:130px" value="${row['STATUS 2']||''}" onchange="saveField(${rowIndex}, '${nopol}', 'STATUS 2', this.value)"></td>
-                    <td>${row['KETERANGAN'] || ''}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
+            return textMatches && dateMatches;
 
-        // Fungsi bantu (Simplified untuk brevity)
-        function saveField(rowIndex, nopol, field, val) {
-            fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({action:"update", ROW_INDEX:rowIndex, NOPOL:nopol, [field]:val}) })
-            .then(() => fetchDashboardData());
-        }
+        });
 
-        function fetchDashboardData() {
-            showLoading(true);
-            fetch(APPS_SCRIPT_URL).then(r=>r.json()).then(d => { database.logs = d.logs; filterTable(); showLoading(false); });
-        }
+    const sortedLogs =
+        [...filtered].reverse();
 
-        function filterTable() {
-            const query = document.getElementById('tableSearch').value.toLowerCase();
-            const date = document.getElementById('dateFilter').value;
-            renderLogsTable(database.logs.filter(row => JSON.stringify(row).toLowerCase().includes(query)));
-        }
+    if(sortedLogs.length===0){
 
-        function showLoading(isVisible, msg) {
-            document.getElementById('loadingOverlay').style.display = isVisible ? 'flex' : 'none';
-        }
-    </script>
+        tbody.innerHTML=`
+        <tr>
+            <td colspan="15"
+                style="text-align:center;padding:20px;">
+                Tidak ada data
+            </td>
+        </tr>
+        `;
+
+        return;
+    }
+
+    sortedLogs.forEach((row,idx)=>{
+
+        const tr=document.createElement('tr');
+
+        tr.innerHTML=`
+
+            <td>${sortedLogs.length-idx}</td>
+            <td>${row['NOPOL']||''}</td>
+            <td>${row['DRIVER NAME']||''}</td>
+            <td>${row['TYPE']||''}</td>
+            <td>${row['CORDER DATE']||''}</td>
+            <td>${row['ORIGIN']||''}</td>
+            <td>${row['IN LOAD']||''}</td>
+            <td>${row['OUT LOAD']||''}</td>
+            <td>${row['DESTINATION']||''}</td>
+            <td>${row['STATUS 1']||''}</td>
+            <td>${row['UPDATE POSITION']||''}</td>
+            <td>${row['OUT CUST.']||''}</td>
+            <td>${row['IN CUST.']||''}</td>
+            <td>${row['STATUS 2']||''}</td>
+            <td>${row['KETERANGAN']||''}</td>
+
+        `;
+
+        tbody.appendChild(tr);
+
+    });
+
+}
+
+function processDashboardJpg(mode){
+
+    const selectedDate =
+        document.getElementById('dateFilter')
+        .value || "Semua_Tanggal";
+
+    const captureArea =
+        document.getElementById(
+        'tableCardToCapture');
+
+    if(mode==='view'){
+
+        renderViewMode();
+
+        document.getElementById(
+        'viewModeContainer')
+        .style.display='block';
+
+        window.scrollTo({
+            top:
+            document.getElementById(
+            'viewModeContainer'
+            ).offsetTop - 20,
+            behavior:'smooth'
+        });
+
+        return;
+    }
+
+    showLoading(true);
+
+    html2canvas(captureArea,{
+        useCORS:true,
+        scale:2,
+        scrollX:0,
+        scrollY:0,
+        windowWidth:captureArea.scrollWidth,
+        windowHeight:captureArea.scrollHeight
+    })
+
+    .then(canvas=>{
+
+        const imgDataUrl =
+            canvas.toDataURL(
+            "image/jpeg",0.95);
+
+        const downloadAnchor =
+            document.createElement('a');
+
+        downloadAnchor.href =
+            imgDataUrl;
+
+        downloadAnchor.download =
+            `LOGISLY_DASHBOARD_${selectedDate}.jpg`;
+
+        document.body.appendChild(
+            downloadAnchor
+        );
+
+        downloadAnchor.click();
+
+        document.body.removeChild(
+            downloadAnchor
+        );
+
+        showLoading(false);
+
+    })
+
+    .catch(err=>{
+
+        console.error(err);
+
+        showLoading(false);
+
+        alert("Gagal membuat JPG");
+
+    });
+
+}
+
+function closeViewMode(){
+
+    document.getElementById(
+    'viewModeContainer')
+    .style.display='none';
+
+}
+
+function filterTable(){
+
+    const query =
+        document.getElementById(
+        'tableSearch')
+        .value.toLowerCase().trim();
+
+    const selectedDate =
+        document.getElementById(
+        'dateFilter').value;
+
+    const filtered =
+        database.logs.filter(row=>{
+
+            const nopol =
+                String(row['NOPOL']||'')
+                .toLowerCase();
+
+            const driver =
+                String(row['DRIVER NAME']||'')
+                .toLowerCase();
+
+            const origin =
+                String(row['ORIGIN']||'')
+                .toLowerCase();
+
+            const destination =
+                String(row['DESTINATION']||'')
+                .toLowerCase();
+
+            const textMatches =
+                nopol.includes(query) ||
+                driver.includes(query) ||
+                origin.includes(query) ||
+                destination.includes(query);
+
+            let dateMatches=true;
+
+            if(selectedDate){
+
+                let rowDateStr =
+                    String(
+                    row['CORDER DATE']||
+                    row['ORDER DATE']||''
+                    ).trim();
+
+                if(rowDateStr.includes('T')){
+                    rowDateStr =
+                    rowDateStr.split('T')[0];
+                }
+
+                dateMatches =
+                    rowDateStr.includes(selectedDate);
+            }
+
+            return textMatches && dateMatches;
+
+        });
+
+    renderLogsTable(filtered);
+
+}
+
+function clearDateFilter(){
+
+    document.getElementById(
+    'dateFilter').value='';
+
+    filterTable();
+
+}
+
+function showLoading(isVisible){
+
+    const overlay =
+        document.getElementById(
+        'loadingOverlay');
+
+    if(isVisible){
+
+        overlay.style.display='flex';
+
+    }else{
+
+        overlay.style.display='none';
+
+    }
+
+}
+
+</script>
+
 </body>
 </html>
