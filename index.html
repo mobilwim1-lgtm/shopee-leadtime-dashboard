@@ -272,6 +272,23 @@
         .status-cancel { background-color: #ffebee; color: #c62828; }
         .status-generic { background-color: #f5f5f5; color: #424242; }
 
+        /* Table Input Select Style */
+        .table-select {
+            padding: 4px 8px;
+            font-size: 12px;
+            height: 28px;
+            width: 135px;
+            border-radius: 4px;
+            border: 1px solid #cbd5e0;
+            background-color: #fff;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+        }
+        .table-select:focus {
+            border-color: var(--primary-color);
+        }
+
         /* Full Screen Loading Overlay */
         .overlay {
             position: fixed;
@@ -431,9 +448,9 @@
                                     <th>DESTINATION</th>
                                     <th>STATUS 1</th>
                                     <th>UPDATE POSITION</th>
+                                    <th>STATUS 2</th>
                                     <th>IN CUST.</th>
                                     <th>OUT CUST.</th>
-                                    <th>STATUS 2</th>
                                     <th>KETERANGAN</th>
                                 </tr>
                             </thead>
@@ -595,7 +612,7 @@
                 const destination = row['DESTINATION'] || '';
                 const status1 = row['STATUS 1'] || row['Status 1'] || '';
                 const updatePosition = row['UPDATE POSITION'] || row['Update Position'] || '';
-                const status2 = row['STATUS 2'] || row['Status 2'] || '';
+                const status2 = (row['STATUS 2'] || row['Status 2'] || '').toUpperCase().trim();
                 const keterangan = row['KETERANGAN'] || '';
                 const rowIndex = row['ROW_INDEX'];
 
@@ -616,7 +633,16 @@
                     <td><b>${destination}</b></td>
                     <td><span class="badge-status ${s1Class}">${status1}</span></td>
                     <td><small>${updatePosition}</small></td>
-                    <td><span class="badge-status status-open">${status2}</span></td>
+                    <td>
+                        <select class="table-select" onchange="saveStatus2Inline(${rowIndex}, this.value)">
+                            <option value="" ${status2 === '' ? 'selected' : ''}>-- Pilih Status --</option>
+                            <option value="FINISH DO" ${status2 === 'FINISH DO' ? 'selected' : ''}>FINISH DO</option>
+                            <option value="ANTRI MUAT" ${status2 === 'ANTRI MUAT' ? 'selected' : ''}>ANTRI MUAT</option>
+                            <option value="ANTRI BONGKAR" ${status2 === 'ANTRI BONGKAR' ? 'selected' : ''}>ANTRI BONGKAR</option>
+                            <option value="STANDBY" ${status2 === 'STANDBY' ? 'selected' : ''}>STANDBY</option>
+                            <option value="CANCEL" ${status2 === 'CANCEL' ? 'selected' : ''}>CANCEL</option>
+                        </select>
+                    </td>
                     <td>${renderTimestampCell(rowIndex, 'IN CUST.', row['IN CUST.'] || row['IN CUST'])}</td>
                     <td>${renderTimestampCell(rowIndex, 'OUT CUST.', row['OUT CUST.'] || row['OUT CUST'])}</td>
                     <td><span style="font-size:12px; color:#555;">${keterangan}</span></td>
@@ -625,7 +651,7 @@
             });
         }
 
-        // Render struktur tombol timestamp / teks jam yang bisa diedit kembali
+        // Render struktur tombol timestamp / teks jam kustom
         function renderTimestampCell(rowIndex, fieldName, currentVal) {
             if (currentVal && String(currentVal).trim() !== "") {
                 return `<div class="ts-btn filled" style="cursor:pointer;" title="Klik untuk mengubah/edit waktu" onclick="enableInlinePicker(this, ${rowIndex}, '${fieldName}', '${currentVal}')">⏱️ ${currentVal}</div>`;
@@ -634,14 +660,12 @@
             }
         }
 
-        // 5. FITUR UTAMA BARU: Mengubah tombol menjadi DateTime Picker lokal di baris tabel
+        // Mengubah tombol menjadi DateTime Picker lokal di baris tabel
         function enableInlinePicker(element, rowIndex, fieldName, currentVal) {
-            // Cek proteksi agar input tidak bertumpuk jika diklik berkali-kali
             if (element.tagName === 'DIV' && element.querySelector('input')) return;
             
             let defaultVal = "";
             if (currentVal && currentVal.trim() !== "") {
-                // Konversi format Google Sheet "YYYY-MM-DD HH:mm:ss" -> format HTML "YYYY-MM-DDTHH:mm"
                 let parts = currentVal.split(' ');
                 if (parts.length >= 2) {
                     defaultVal = parts[0] + 'T' + parts[1].substring(0, 5);
@@ -649,24 +673,21 @@
                     defaultVal = currentVal.replace(' ', 'T').substring(0, 16);
                 }
             } else {
-                // Jika data kosong, default ke tanggal & jam lokal detik ini
                 const now = new Date();
                 const tzoffset = now.getTimezoneOffset() * 60000;
                 defaultVal = (new Date(now - tzoffset)).toISOString().slice(0, 16);
             }
 
             const safeId = `picker_${rowIndex}_${fieldName.replace(/[^a-zA-Z0-9]/g, '')}`;
-            const cell = element.parentElement;
             
-            // Ubah struktur element menjadi inline input picker dengan tombol Simpan (💾) dan Batal (❌)
-            cell.innerHTML = `
+            element.parentElement.innerHTML = `
                 <div style="display: flex; gap: 4px; align-items: center;">
                     <input type="datetime-local" id="${safeId}" class="form-control" 
                            style="padding: 2px 4px; font-size: 11px; width: 145px; height: 26px; border-color: var(--primary-color);" 
                            value="${defaultVal}">
                     <button type="button" class="ts-btn filled" 
                             style="background-color: #2ecc71; color: white; border: none; padding: 2px 6px; border-radius: 4px; height: 26px; display: flex; align-items: center;" 
-                            title="Simpan perubahan waktu"
+                            title="Simpan pembaruan waktu"
                             onclick="saveInlineTimestamp(${rowIndex}, '${fieldName}', '${safeId}')">
                         💾
                     </button>
@@ -680,7 +701,7 @@
             `;
         }
 
-        // Fungsi kirim data perubahan waktu kustom ke Google Apps Script
+        // Fungsi kirim data pembaruan waktu kustom ke Google Apps Script
         function saveInlineTimestamp(rowIndex, fieldName, pickerId) {
             const picker = document.getElementById(pickerId);
             if (!picker || !picker.value) {
@@ -688,7 +709,6 @@
                 return;
             }
 
-            // Kembalikan format HTML "YYYY-MM-DDTHH:mm" -> format Database Google Sheet "YYYY-MM-DD HH:mm:ss"
             const formattedTimestamp = picker.value.replace('T', ' ') + ":00";
 
             showLoading(true, `Menyimpan waktu kustom ${fieldName}...`);
@@ -706,7 +726,7 @@
             .then(res => res.json())
             .then(result => {
                 if (result.status === 'success') {
-                    fetchDashboardData(); // Refresh UI agar data terbaru langsung tersinkronisasi kembali
+                    fetchDashboardData();
                 } else {
                     alert("Gagal memperbarui waktu: " + result.message);
                     showLoading(false);
@@ -719,7 +739,39 @@
             });
         }
 
-        // 6. AKSI FORM: Kirim data Input Baru ke Google Spreadsheet (doPost)
+        // FUNGSI BARU: Otomatis kirim data perubahan STATUS 2 ke Google Sheet
+        function saveStatus2Inline(rowIndex, selectedValue) {
+            if (!selectedValue) return;
+
+            showLoading(true, `Memperbarui STATUS 2 ke ${selectedValue}...`);
+
+            const payload = {
+                "action": "update",
+                "ROW_INDEX": rowIndex,
+                "STATUS 2": selectedValue
+            };
+
+            fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    fetchDashboardData(); // Refresh data agar tampilan UI sinkron kembali dengan Google Sheet
+                } else {
+                    alert("Gagal memperbarui STATUS 2: " + result.message);
+                    showLoading(false);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showLoading(false);
+                alert("Gagal menghubungi server Apps Script: " + err.message);
+            });
+        }
+
+        // 5. AKSI FORM: Kirim data Input Baru ke Google Spreadsheet (doPost)
         function handleFormSubmit(event) {
             event.preventDefault();
             showLoading(true, "Menyimpan data baru...");
@@ -734,7 +786,7 @@
                 "DESTINATION": document.getElementById('destinationInput').value.trim(),
                 "STATUS 1": document.getElementById('status1Input').value,
                 "UPDATE POSITION": document.getElementById('updatePositionInput').value.trim(),
-                "STATUS 2": document.getElementById('status2Input').value.trim(),
+                "STATUS 2": document.getElementById('status2Input').value,
                 "KETERANGAN": document.getElementById('keteranganInput').value.trim()
             };
 
@@ -761,7 +813,7 @@
             });
         }
 
-        // 7. FUNGSI CLIENT-SIDE FILTERING: Kotak Pencarian Live
+        // 6. FUNGSI CLIENT-SIDE FILTERING: Kotak Pencarian Live
         function filterTable() {
             const query = document.getElementById('tableSearch').value.toLowerCase().trim();
             const filtered = database.logs.filter(row => {
