@@ -248,8 +248,24 @@
             background-color: #e4e5e9;
         }
 
-        /* Custom style untuk tombol eksport JPG */
-        .btn-capture-jpg {
+        /* Gaya Khusus untuk Tombol Cetak Terpisah */
+        .btn-view-jpg {
+            background-color: #3498db;
+            color: white;
+            border: 1px solid #2980b9;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-left: 5px;
+        }
+        .btn-view-jpg:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-save-jpg {
             background-color: #2ecc71;
             color: white;
             border: 1px solid #27ae60;
@@ -259,10 +275,9 @@
             border-radius: 6px;
             cursor: pointer;
             transition: background 0.2s;
-            margin-left: 5px;
+            margin-left: 3px;
         }
-
-        .btn-capture-jpg:hover {
+        .btn-save-jpg:hover {
             background-color: #27ae60;
         }
 
@@ -451,7 +466,8 @@
                                 <input type="date" id="dateFilter" class="form-control" style="width: 150px; padding: 7px 10px;" onchange="filterTable()">
                                 <button type="button" class="btn-clear-date" onclick="clearDateFilter()">Semua</button>
                                 
-                                <button type="button" class="btn-capture-jpg" onclick="captureTableToJpg()">👁️ View & Save JPG</button>
+                                <button type="button" class="btn-view-jpg" onclick="processDashboardJpg('view')">👁️ View JPG</button>
+                                <button type="button" class="btn-save-jpg" onclick="processDashboardJpg('save')">💾 Save JPG</button>
                             </div>
                         </div>
                         <div style="font-size: 13px; color: var(--text-muted); font-weight: 500;" id="rowCountText">
@@ -527,40 +543,52 @@
 
 
         /* =========================================================================
-           📸 ENGINE PEREDUKSI & EKSPOR GAMBAR DASHBOARD KE JPG 
+           📸 ENGINE PROCESSING JPG (SEPARATED VIEW & SAVE FUNCTION)
            ========================================================================= */
-        function captureTableToJpg() {
+        function processDashboardJpg(mode) {
             const selectedDate = document.getElementById('dateFilter').value || "Semua_Tanggal";
             const captureArea = document.getElementById('tableCardToCapture');
             
-            showLoading(true, "Mengekstrak tabel dan mengonversi ke berkas gambar JPG...");
+            const processMessage = mode === 'view' ? "Menyiapkan pratinjau visual gambar..." : "Mengekstrak tabel dan mengonversi ke berkas JPG...";
+            showLoading(true, processMessage);
 
             // Konfigurasi sistem rendering grafis html2canvas
             html2canvas(captureArea, {
                 useCORS: true,
-                scale: 2, // Menggandakan kepadatan piksel agar teks detail tabel tajam (HD) saat di-zoom
+                scale: 2, // Menggandakan resolusi piksel agar teks detail tabel tajam saat di-zoom
                 scrollX: 0,
                 scrollY: 0,
-                windowWidth: captureArea.scrollWidth, // Menjamin seluruh kolom horizontal tabel yang terscroll ikut ter-capture
+                windowWidth: captureArea.scrollWidth, // Menjamin seluruh isi baris horizontal yang ter-scroll ikut terambil
                 windowHeight: captureArea.scrollHeight
             }).then(canvas => {
                 // Konversi canvas mentah ke format berkas Gambar Kompresi JPEG tinggi (.jpg)
                 const imgDataUrl = canvas.toDataURL("image/jpeg", 0.95);
                 
-                // Sistem Triggering Otomatis Unduhan Dokumen
-                const downloadAnchor = document.createElement('a');
-                downloadAnchor.href = imgDataUrl;
-                downloadAnchor.download = `LOGISLY_DASHBOARD_PER_TANGGAL_${selectedDate}.jpg`;
-                
-                document.body.appendChild(downloadAnchor);
-                downloadAnchor.click();
-                document.body.removeChild(downloadAnchor);
+                if (mode === 'view') {
+                    // MODE VIEW: Membuka gambar di tab baru browser
+                    const newWindow = window.open();
+                    if (newWindow) {
+                        newWindow.document.write(`<title>Preview Dashboard ${selectedDate}</title><img src="${imgDataUrl}" style="max-width:100%; height:auto; display:block; margin:20px auto; box-shadow:0 4px 10px rgba(0,0,0,0.15); border-radius:8px;">`);
+                        newWindow.document.close();
+                    } else {
+                        alert("Gagal membuka tab pratinjau. Pastikan pop-up browser Anda diizinkan.");
+                    }
+                } else if (mode === 'save') {
+                    // MODE SAVE: Memicu aksi download otomatis ke komputer/ponsel
+                    const downloadAnchor = document.createElement('a');
+                    downloadAnchor.href = imgDataUrl;
+                    downloadAnchor.download = `LOGISLY_DASHBOARD_${selectedDate}.jpg`;
+                    
+                    document.body.appendChild(downloadAnchor);
+                    downloadAnchor.click();
+                    document.body.removeChild(downloadAnchor);
+                }
                 
                 showLoading(false);
             }).catch(error => {
                 console.error("Gagal pemrosesan visual grafis:", error);
                 showLoading(false);
-                alert("Gagal mengekspor dashboard gambar. Periksa fungsionalitas browser Anda.");
+                alert("Gagal memproses gambar dashboard. Periksa fungsionalitas browser Anda.");
             });
         }
 
