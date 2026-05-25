@@ -552,20 +552,17 @@
             const processMessage = mode === 'view' ? "Menyiapkan pratinjau visual gambar..." : "Mengekstrak tabel dan mengonversi ke berkas JPG...";
             showLoading(true, processMessage);
 
-            // Konfigurasi sistem rendering grafis html2canvas
             html2canvas(captureArea, {
                 useCORS: true,
-                scale: 2, // Menggandakan resolusi piksel agar teks detail tabel tajam saat di-zoom
+                scale: 2, 
                 scrollX: 0,
                 scrollY: 0,
-                windowWidth: captureArea.scrollWidth, // Menjamin seluruh isi baris horizontal yang ter-scroll ikut terambil
+                windowWidth: captureArea.scrollWidth, 
                 windowHeight: captureArea.scrollHeight
             }).then(canvas => {
-                // Konversi canvas mentah ke format berkas Gambar Kompresi JPEG tinggi (.jpg)
                 const imgDataUrl = canvas.toDataURL("image/jpeg", 0.95);
                 
                 if (mode === 'view') {
-                    // MODE VIEW: Membuka gambar di tab baru browser
                     const newWindow = window.open();
                     if (newWindow) {
                         newWindow.document.write(`<title>Preview Dashboard ${selectedDate}</title><img src="${imgDataUrl}" style="max-width:100%; height:auto; display:block; margin:20px auto; box-shadow:0 4px 10px rgba(0,0,0,0.15); border-radius:8px;">`);
@@ -574,7 +571,6 @@
                         alert("Gagal membuka tab pratinjau. Pastikan pop-up browser Anda diizinkan.");
                     }
                 } else if (mode === 'save') {
-                    // MODE SAVE: Memicu aksi download otomatis ke komputer/ponsel
                     const downloadAnchor = document.createElement('a');
                     downloadAnchor.href = imgDataUrl;
                     downloadAnchor.download = `LOGISLY_DASHBOARD_${selectedDate}.jpg`;
@@ -637,6 +633,40 @@
                     showLoading(false);
                     alert("Gagal memuat basis data aman. Periksa jaringan Anda.");
                 });
+        }
+
+        // =========================================================================
+        // UTILITAS KONVERSI TANGGAL KE DD/MM/YYYY
+        // =========================================================================
+        function formatDateToDDMMYYYY(dateStr) {
+            if (!dateStr) return '';
+            
+            // Hapus karakter 'T' jika dari format ISO Date (T00:00:00)
+            if (dateStr.includes('T')) dateStr = dateStr.split('T')[0];
+            
+            let d, m, y;
+            if (dateStr.includes('-')) {
+                const parts = dateStr.split('-');
+                if (parts[0].length === 4) { // YYYY-MM-DD
+                    y = parts[0]; m = parts[1]; d = parts[2];
+                } else { // DD-MM-YYYY
+                    d = parts[0]; m = parts[1]; y = parts[2];
+                }
+            } else if (dateStr.includes('/')) {
+                const parts = dateStr.split('/');
+                if (parts[0].length === 4) { // YYYY/MM/DD
+                    y = parts[0]; m = parts[1]; d = parts[2];
+                } else { // DD/MM/YYYY
+                    d = parts[0]; m = parts[1]; y = parts[2];
+                }
+            } else {
+                return dateStr; // Kembalikan string asli jika tidak dikenali
+            }
+            
+            // Pastikan day dan month selalu memiliki 2 digit
+            d = d.padStart(2, '0');
+            m = m.padStart(2, '0');
+            return `${d}/${m}/${y}`;
         }
 
         function populateWarehouseDatalist(warehouses) {
@@ -724,7 +754,11 @@
                 const nopol = row['NOPOL'] || '';
                 const driver = row['DRIVER NAME'] || row['DRIVER'] || '';
                 const type = row['TYPE'] || '';
-                const orderDate = row['CORDER DATE'] || row['ORDER DATE'] || '';
+                
+                // Format Order Date menjadi DD/MM/YYYY saat dirender
+                let orderDate = String(row['CORDER DATE'] || row['ORDER DATE'] || '').trim();
+                orderDate = formatDateToDDMMYYYY(orderDate);
+                
                 const origin = row['ORIGIN'] || '';
                 const destination = row['DESTINATION'] || '';
                 const status1 = (row['STATUS 1'] || row['Status 1'] || 'OPEN').toUpperCase().trim();
@@ -743,7 +777,7 @@
                     <td style="font-weight:600; color:var(--primary-color);">${nopol}</td>
                     <td>${driver}</td>
                     <td><small>${type}</small></td>
-                    <td>${orderDate}</td>
+                    <td style="font-weight:600;">${orderDate}</td>
                     <td><b>${origin}</b></td>
                     <td>
                         <input type="text" class="form-control" style="padding: 4px 8px; font-size: 12px; height: 28px; width: 130px;" 
@@ -819,13 +853,21 @@
         function handleFormSubmit(event) {
             event.preventDefault();
             showLoading(true, "Mengirim data terenkripsi...");
+            
+            // Konversi nilai input dari browser (YYYY-MM-DD) ke spesifikasi khusus sistem (DD/MM/YYYY)
+            const rawOrderDate = document.getElementById('orderDate').value;
+            let finalOrderDate = rawOrderDate;
+            if(rawOrderDate) {
+                const [y, m, d] = rawOrderDate.split('-');
+                finalOrderDate = `${d}/${m}/${y}`;
+            }
 
             const payload = {
                 "NOPOL": document.getElementById('nopolInput').value.trim().toUpperCase(),
                 "DRIVER NAME": document.getElementById('driverName').value.trim(),
                 "NO HP": document.getElementById('noHp').value.trim(),
                 "TYPE": document.getElementById('truckType').value.trim(),
-                "CORDER DATE": document.getElementById('orderDate').value,
+                "CORDER DATE": finalOrderDate, // Format DD/MM/YYYY yang dikirim ke Sheet
                 "ORIGIN": document.getElementById('originInput').value.trim(),
                 "DESTINATION": document.getElementById('destinationInput').value.trim(),
                 "STATUS 1": document.getElementById('status1Input').value,
@@ -859,7 +901,14 @@
 
         function filterTable() {
             const query = document.getElementById('tableSearch').value.toLowerCase().trim();
-            const selectedDate = document.getElementById('dateFilter').value;
+            const selectedDate = document.getElementById('dateFilter').value; // Mengambil YYYY-MM-DD
+            
+            // Konversi Filter Input Date ke Format DD/MM/YYYY agar cocok/matching secara tepat dengan Data yang ada
+            let targetFilterDate = "";
+            if (selectedDate) {
+                const [fy, fm, fd] = selectedDate.split('-');
+                targetFilterDate = `${fd}/${fm}/${fy}`;
+            }
 
             const filtered = database.logs.filter(row => {
                 const nopol = String(row['NOPOL'] || '').toLowerCase();
@@ -869,20 +918,15 @@
                 const textMatches = nopol.includes(query) || driver.includes(query) || origin.includes(query) || destination.includes(query);
                 
                 let dateMatches = true; 
-                if (selectedDate) {
+                if (targetFilterDate) {
+                    // Ambil dan Konversi Tanggal dari Tabel
                     let rowDateStr = String(row['CORDER DATE'] || row['ORDER DATE'] || '').trim();
-                    if (rowDateStr.includes('T')) {
-                        rowDateStr = rowDateStr.split('T')[0];
-                    }
-                    if (rowDateStr === selectedDate || rowDateStr.includes(selectedDate)) {
-                        dateMatches = true;
-                    } else {
-                        const parts = selectedDate.split('-'); 
-                        const dmyFormat = `${parts[2]}/${parts[1]}/${parts[0]}`; 
-                        const dmyFormatShort = `${parseInt(parts[2])}/${parseInt(parts[1])}/${parts[0]}`; 
-                        dateMatches = rowDateStr.includes(dmyFormat) || rowDateStr.includes(dmyFormatShort);
-                    }
+                    rowDateStr = formatDateToDDMMYYYY(rowDateStr);
+                    
+                    // Match yang sempurna antara Tanggal Formater Filter dengan Tanggal dari Table/Google Sheet
+                    dateMatches = (rowDateStr === targetFilterDate);
                 }
+                
                 return textMatches && dateMatches;
             });
 
