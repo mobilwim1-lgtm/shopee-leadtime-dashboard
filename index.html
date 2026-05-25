@@ -740,6 +740,7 @@
             const tbody = document.getElementById('logsTableBody');
             tbody.innerHTML = '';
 
+            // Menjaga urutan terbaru di atas, namun penomoran (NO) akan di-set berurutan dari angka 1 ke bawah.
             const sortedLogs = [...filteredLogs].reverse();
             document.getElementById('rowCountText').innerText = `Menampilkan ${sortedLogs.length} data operasional`;
 
@@ -773,7 +774,7 @@
                 const outCust = row['OUT CUST'] || row['OUT CUST.'] || '';
 
                 tr.innerHTML = `
-                    <td style="font-weight:bold; color:#777;">${sortedLogs.length - idx}</td>
+                    <td style="font-weight:bold; color:#777;">${idx + 1}</td>
                     <td style="font-weight:600; color:var(--primary-color);">${nopol}</td>
                     <td>${driver}</td>
                     <td><small>${type}</small></td>
