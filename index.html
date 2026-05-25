@@ -490,8 +490,8 @@
                                     <th>DESTINATION</th>
                                     <th>STATUS 1</th>
                                     <th>UPDATE POSITION</th>
-                                    <th>IN CUST.</th>
-                                    <th>OUT CUST.</th>
+                                    <th>IN CUST</th>
+                                    <th>OUT CUST</th>
                                     <th>STATUS 2</th>
                                     <th>KETERANGAN</th>
                                 </tr>
@@ -596,7 +596,6 @@
         /* =========================================================================
            ⚙️ CORE DASHBOARD ENGINE
            ========================================================================= */
-        // Integrasi Apps Script yang menarik data dari Google Sheet Utama: https://docs.google.com/spreadsheets/d/1hcLKPs2q73EQ_oLyykNaKWEPSW0sOzGILlwFbnfCCkc/edit?gid=0#gid=0
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhLowM9ffwffPA-ssTLpvTzzWRDYVFrek1ySj_jZljgoVQlxB4WX8lep_fbF38687Yug/exec";
 
         let database = {
@@ -608,7 +607,7 @@
         document.getElementById('orderDate').valueAsDate = new Date();
 
         window.addEventListener('DOMContentLoaded', () => {
-            if (APPS_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbxhLowM9ffwffPA-ssTLpvTzzWRDYVFrek1ySj_jZljgoVQlxB4WX8lep_fbF38687Yug/exec === "") {
+            if (APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE" || APPS_SCRIPT_URL === "") {
                 showLoading(false);
                 alert("Perhatian: Konfigurasi Apps Script belum disematkan dengan benar oleh pengembang.");
             } else {
@@ -736,11 +735,11 @@
 
                 const inLoad = row['IN LOAD'] || '';
                 const outLoad = row['OUT LOAD'] || '';
-                const outCust = row['OUT CUST.'] || row['OUT CUST'] || '';
-                const inCust = row['IN CUST.'] || row['IN CUST'] || '';
+                const inCust = row['IN CUST'] || row['IN CUST.'] || '';
+                const outCust = row['OUT CUST'] || row['OUT CUST.'] || '';
 
                 tr.innerHTML = `
-                    <td style="font-weight:bold; color:#777;">${idx + 1}</td>
+                    <td style="font-weight:bold; color:#777;">${sortedLogs.length - idx}</td>
                     <td style="font-weight:600; color:var(--primary-color);">${nopol}</td>
                     <td>${driver}</td>
                     <td><small>${type}</small></td>
@@ -769,12 +768,12 @@
                     <td>
                         <input type="text" class="form-control" style="padding: 4px 8px; font-size: 12px; height: 28px; width: 130px;" 
                                value="${inCust}" placeholder="Jam IN CUST..." 
-                               onchange="saveFieldInline(${rowIndex}, '${nopol}', 'IN CUST.', this.value)">
+                               onchange="saveFieldInline(${rowIndex}, '${nopol}', 'IN CUST', this.value)">
                     </td>
                     <td>
                         <input type="text" class="form-control" style="padding: 4px 8px; font-size: 12px; height: 28px; width: 130px;" 
                                value="${outCust}" placeholder="Jam OUT CUST..." 
-                               onchange="saveFieldInline(${rowIndex}, '${nopol}', 'OUT CUST.', this.value)">
+                               onchange="saveFieldInline(${rowIndex}, '${nopol}', 'OUT CUST', this.value)">
                     </td>
                     <td>
                         <input type="text" class="form-control" style="padding: 4px 8px; font-size: 12px; height: 28px; width: 130px;" 
