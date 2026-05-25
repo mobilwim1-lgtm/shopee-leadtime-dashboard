@@ -293,7 +293,7 @@
             border-collapse: collapse;
             text-align: left;
             background-color: white;
-            min-width: 1350px;
+            min-width: 1450px;
         }
 
         th {
@@ -494,6 +494,7 @@
                                     <th>OUT CUST</th>
                                     <th>STATUS 2</th>
                                     <th>KETERANGAN</th>
+                                    <th style="text-align: center; color: var(--danger-color);">AKSI</th>
                                 </tr>
                             </thead>
                             <tbody id="logsTableBody">
@@ -740,12 +741,12 @@
             const tbody = document.getElementById('logsTableBody');
             tbody.innerHTML = '';
 
-            // Menjaga urutan terbaru di atas, namun penomoran (NO) akan di-set berurutan dari angka 1 ke bawah.
+            // Menjaga urutan terbaru di atas, namun penomoran (NO) selalu di-set berurutan dari angka 1 ke bawah.
             const sortedLogs = [...filteredLogs].reverse();
             document.getElementById('rowCountText').innerText = `Menampilkan ${sortedLogs.length} data operasional`;
 
             if (sortedLogs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; color:gray; padding:20px;">Tidak ada record data operasional yang cocok dengan filter.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="16" style="text-align:center; color:gray; padding:20px;">Tidak ada record data operasional yang cocok dengan filter.</td></tr>`;
                 return;
             }
 
@@ -816,6 +817,14 @@
                                onchange="saveFieldInline(${rowIndex}, '${nopol}', 'STATUS 2', this.value)">
                     </td>
                     <td><span style="font-size:12px; color:#555;">${keterangan}</span></td>
+                    <td style="text-align: center;">
+                        <button type="button" style="background-color: var(--danger-color); color: white; border: none; padding: 5px 10px; font-size: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background 0.2s;"
+                                onclick="deleteRowInline(${rowIndex}, '${nopol}', '${orderDate}')"
+                                onmouseover="this.style.backgroundColor='#c0392b'"
+                                onmouseout="this.style.backgroundColor='var(--danger-color)'">
+                            🗑️ Hapus
+                        </button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -848,6 +857,44 @@
                 console.error(err);
                 showLoading(false);
                 alert("Gagal terhubung dengan server pengaman.");
+            });
+        }
+
+        // =========================================================================
+        // FUNGSI BARU: MENGHAPUS DATA BERDASARKAN NOPOL & TANGGAL PILIHAN
+        // =========================================================================
+        function deleteRowInline(rowIndex, nopol, orderDate) {
+            if (!confirm(`Apakah Anda yakin ingin MENGHAPUS data berikut secara permanen?\n\n📌 NOPOL: ${nopol}\n📅 TANGGAL: ${orderDate}`)) {
+                return;
+            }
+
+            showLoading(true, `Menghapus data Nopol ${nopol}...`);
+
+            const payload = {
+                "action": "delete",
+                "ROW_INDEX": rowIndex,
+                "NOPOL": nopol,
+                "ORDER_DATE": orderDate
+            };
+
+            fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    alert(`✅ Data Nopol ${nopol} pada tanggal ${orderDate} berhasil dihapus.`);
+                    fetchDashboardData(); 
+                } else {
+                    alert(`Gagal menghapus data: ` + result.message);
+                    showLoading(false);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showLoading(false);
+                alert("Gagal terhubung dengan server Apps Script saat mencoba menghapus.");
             });
         }
 
@@ -902,9 +949,9 @@
 
         function filterTable() {
             const query = document.getElementById('tableSearch').value.toLowerCase().trim();
-            const selectedDate = document.getElementById('dateFilter').value; // Mengambil YYYY-MM-DD
+            const selectedDate = document.getElementById('dateFilter').value; // Mengambil YYYY-MM-DD dari elemen input
             
-            // Konversi Filter Input Date ke Format DD/MM/YYYY agar cocok/matching secara tepat dengan Data yang ada
+            // Konversi Filter Input Date ke Format DD/MM/YYYY agar cocok secara tepat dengan data Live Monitoring
             let targetFilterDate = "";
             if (selectedDate) {
                 const [fy, fm, fd] = selectedDate.split('-');
@@ -920,11 +967,11 @@
                 
                 let dateMatches = true; 
                 if (targetFilterDate) {
-                    // Ambil dan Konversi Tanggal dari Tabel
+                    // Ambil dan Konversi Tanggal dari data Live Monitoring & Update Timestamp
                     let rowDateStr = String(row['CORDER DATE'] || row['ORDER DATE'] || '').trim();
                     rowDateStr = formatDateToDDMMYYYY(rowDateStr);
                     
-                    // Match yang sempurna antara Tanggal Formater Filter dengan Tanggal dari Table/Google Sheet
+                    // Pencocokan presisi format DD/MM/YYYY
                     dateMatches = (rowDateStr === targetFilterDate);
                 }
                 
