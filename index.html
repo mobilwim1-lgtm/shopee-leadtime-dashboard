@@ -784,7 +784,8 @@
                 const driver = row['DRIVER NAME'] || row['DRIVER'] || '';
                 const type = row['TYPE'] || '';
                 
-                let orderDate = String(row['CORDER DATE'] || row['ORDER DATE'] || '').trim();
+                // Perbaikan renderLogsTable untuk prioritas ORDER DATE
+                let orderDate = String(row['ORDER DATE'] || row['CORDER DATE'] || '').trim();
                 orderDate = formatDateToDDMMYYYY(orderDate);
                 
                 const origin = row['ORIGIN'] || '';
@@ -792,7 +793,7 @@
                 const status1 = (row['STATUS 1'] || row['Status 1'] || 'OPEN').toUpperCase().trim();
                 const updatePosition = row['UPDATE POSITION'] || row['Update Position'] || '';
                 const status2 = (row['STATUS 2'] || row['Status 2'] || '').toUpperCase().trim();
-                const timeSb = row['TIME SB'] || row['Time SB'] || ''; // Ambil TIME SB dari DB
+                const timeSb = row['TIME SB'] || row['Time SB'] || ''; 
                 const keterangan = row['KETERANGAN'] || '';
                 const rowIndex = row['ROW_INDEX'];
 
@@ -854,7 +855,6 @@
                     </td>
                     <td><span style="font-size:12px; color:#555;">${keterangan}</span></td>
                 `;
-                // KOLOM AKSI / HAPUS DIHILANGKAN
                 tbody.appendChild(tr);
             });
         }
@@ -913,10 +913,10 @@
 
             const targetDateStr = formatDateToDDMMYYYY(inputDateRaw);
 
-            // Verifikasi kecocokan data di dalam cache yang ditampilkan
+            // Verifikasi kecocokan data di dalam cache yang ditampilkan dengan perbaikan ORDER DATE
             const targetRecord = database.logs.find(r => {
                 const rNopol = String(r['NOPOL'] || '').toUpperCase().trim();
-                const rDate = formatDateToDDMMYYYY(String(r['CORDER DATE'] || r['ORDER DATE'] || '').trim());
+                const rDate = formatDateToDDMMYYYY(String(r['ORDER DATE'] || r['CORDER DATE'] || '').trim());
                 return rNopol === inputNopol && rDate === targetDateStr;
             });
 
@@ -982,7 +982,7 @@
                 "STATUS 1": document.getElementById('status1Input').value,
                 "UPDATE POSITION": document.getElementById('updatePositionInput').value.trim(),
                 "STATUS 2": document.getElementById('status2Input').value.trim(),
-                "TIME SB": document.getElementById('timeSbInput').value.trim(), // Payload Input TIME SB
+                "TIME SB": document.getElementById('timeSbInput').value.trim(), 
                 "KETERANGAN": document.getElementById('keteranganInput').value.trim()
             };
 
@@ -995,7 +995,7 @@
                 if(result.status === 'success') {
                     document.getElementById('logForm').reset();
                     document.getElementById('orderDate').valueAsDate = new Date();
-                    document.getElementById('timeSbInput').value = ''; // Reset Form TIME SB
+                    document.getElementById('timeSbInput').value = ''; 
                     document.getElementById('nopolStatus').style.display = 'none';
                     fetchDashboardData();
                 } else {
@@ -1017,7 +1017,7 @@
             let targetFilterDate = "";
             if (selectedDate) {
                 const [fy, fm, fd] = selectedDate.split('-');
-                targetFilterDate = `${fd}/${fm}/${fy}`;
+                targetFilterDate = `${fd}/${fm}/${fy}`; 
             }
 
             const filtered = database.logs.filter(row => {
@@ -1025,11 +1025,13 @@
                 const driver = String(row['DRIVER NAME'] || row['DRIVER'] || '').toLowerCase();
                 const origin = String(row['ORIGIN'] || '').toLowerCase();
                 const destination = String(row['DESTINATION'] || '').toLowerCase();
+                
                 const textMatches = nopol.includes(query) || driver.includes(query) || origin.includes(query) || destination.includes(query);
                 
+                // Filter Ketat HANYA Berdasarkan ORDER DATE
                 let dateMatches = true; 
                 if (targetFilterDate) {
-                    let rowDateStr = String(row['CORDER DATE'] || row['ORDER DATE'] || '').trim();
+                    let rowDateStr = String(row['ORDER DATE'] || row['CORDER DATE'] || '').trim();
                     rowDateStr = formatDateToDDMMYYYY(rowDateStr);
                     dateMatches = (rowDateStr === targetFilterDate);
                 }
